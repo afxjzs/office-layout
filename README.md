@@ -2,6 +2,8 @@
 
 A one-page planner for redesigning a small home office (15′ × 7′10″). The room is modeled from tape measurements: windows, doors, trim, sills and a heater. You can drag furniture around a floor plan, see it in 3D, and get warnings when something doesn't fit.
 
+Try it at [doug.is/building/stuff/office-layout](https://www.doug.is/building/stuff/office-layout). That's a copy of `index.html`, updated by hand.
+
 - **Floor plan:** drag to move, `R` to rotate. Pieces snap to walls and to each other. The plan defaults to "north down", which is the view from the desk; a button flips it.
 - **3D view:** updates live, with camera presets. The walls nearest the camera hide so you can see in.
 - **Fit checks:** heights count. A desk top that clears a window sill passes; a cabinet taller than the sill pushed against the wall doesn't. Door swings and the light switch are checked too.

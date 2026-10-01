@@ -228,6 +228,30 @@
       check(`${id} hides again`, o.items.find(i => i.id === id).hidden === true);
     }
 
+    // --- Hosted with a site bar on top (doug.is injects a nav as the first <body> child) ---
+    {
+      check('page has a meta description (used for the doug.is card)', !!document.querySelector('meta[name="description"]')?.content);
+      const fits = () => {
+        const hdr = document.querySelector('header').getBoundingClientRect();
+        const plan = document.getElementById('planWrap').getBoundingClientRect();
+        const three = document.getElementById('three').getBoundingClientRect();
+        return { hdrTop: hdr.top, hdrH: hdr.height, planTop: plan.top, planH: plan.height, threeH: three.height, threeBottom: three.bottom, vh: window.innerHeight };
+      };
+      const bar = document.createElement('nav');
+      bar.style.cssText = 'height:44px;flex:none;background:#ccc';
+      document.body.prepend(bar);
+      window.dispatchEvent(new Event('resize')); await wait();
+      const f = fits();
+      check('with a site bar on top: toolbar sits below the bar', f.hdrTop >= 43, JSON.stringify(f));
+      check('with a site bar on top: toolbar is not stretched and the plan starts right under it', f.hdrH < 90 && f.planTop - (f.hdrTop + f.hdrH) < 2, JSON.stringify(f));
+      check('with a site bar on top: plan and 3D both keep real height', f.planH > 120 && f.threeH > 120, JSON.stringify(f));
+      check('with a site bar on top: 3D view still ends inside the window', f.threeBottom <= f.vh + 1, JSON.stringify(f));
+      bar.remove();
+      window.dispatchEvent(new Event('resize')); await wait();
+      const g = fits();
+      check('without the bar: the page fills the window again', g.hdrTop < 1 && g.threeBottom <= g.vh + 1 && g.threeBottom > g.vh - 2, JSON.stringify(g));
+    }
+
     // --- Cambrie cabinet price ---
     {
       const cam = o.items.find(i => i.id === 'cab-cambrie');
