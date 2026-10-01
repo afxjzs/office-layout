@@ -297,6 +297,18 @@
       check('flip button switches back to north down', o.northDown === true);
     }
 
+    // --- Printer table: measured 23.5 W × 17.5 D (height and position still estimated) ---
+    {
+      const pt = o.items.find(i => i.id === 'printer');
+      check('printer table is the measured 23.5 × 17.5', pt?.w === 23.5 && pt?.d === 17.5, `${pt?.w}×${pt?.d}`);
+      check('printer table still backs onto the south wall', !!pt && Math.abs(pt.y + pt.d/2 - 94) < 0.01, pt && String(pt.y + pt.d/2));
+      check('printer table stays marked as an estimate (height, position)', pt?.est === true);
+      check('no overlap warning between the glass cabinet and the printer table', !o.problems.probs.some(p => p.includes('Printer table')), JSON.stringify(o.problems.probs));
+      const saved = JSON.parse(localStorage.getItem('office-layout.v1'));
+      const edited = saved.layouts.Screenshot?.find(i => i.id === 'printer');
+      check('a printer table the user already resized is left alone', edited?.w === 20 && edited?.d === 16, JSON.stringify(edited && { w: edited.w, d: edited.d }));
+    }
+
     // --- Rounded bookcase: deeper cabinet, shallower shelves ---
     {
       const bc = o.items.find(i => i.id === 'store-bookcase');
