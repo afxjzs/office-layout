@@ -376,8 +376,8 @@ function tallShelving(){
 // The 3-drawer file cabinet already in the room, backed up against the front of the heater.
 function stickerFileCabinet(){
   return { id:'filecab-sticker', kind:'cart', name:'3-drawer file cabinet', w:14.5, d:19, h:28, drawers:3, casterH:0,
-    x:92 + 14.5/2, y:ROOM.heater.y0 - 19/2, rot:180, z:0, color:'#8a2f2f', est:true,
-    note:'Size measured. Backed against the heater front; position along the wall estimated from photo IMG_6235.' };
+    x:ROOM.heater.x1 - 14.5/2, y:ROOM.heater.y0 - 19/2, rot:180, z:0, color:'#8a2f2f', est:false,
+    note:FILECAB_NOTE };
 }
 // More cabinets being considered, sized from their product listings. Parked on open floor, hidden.
 function moreCabinets(){
@@ -396,10 +396,13 @@ function moreCabinets(){
 const BOOKCASE_DEPTHS = { d:15.75, upperD:11.81 };
 const BOOKCASE_NOTE = 'Listing size. The cabinet (~15.75″ deep) sticks out past the 11.81″-deep shelves above it.';
 
-// Printer table, measured Oct 1, 2026: 23.5″ wide × 17.5″ deep, backed onto the south wall.
-// Height and where it sits along the wall are still estimates.
-const PRINTER_MEASURED = { w:23.5, d:17.5, y:ROOM.D - 17.5/2 };
-const PRINTER_NOTE = 'Width and depth measured. Height and position along the wall are estimates.';
+// Printer table, measured Oct 1, 2026: 23.5″ wide × 17.5″ deep, backed onto the south wall with its
+// east side against the heater's west side. Its height is still an estimate.
+const PRINTER_MEASURED = { w:23.5, d:17.5, x:ROOM.heater.x0 - 23.5/2, y:ROOM.D - 17.5/2 };
+const PRINTER_NOTE = 'Width, depth and position measured. Height is an estimate.';
+// 3-drawer file cabinet, placed Oct 1, 2026: against the desk's west end (= the heater's east edge),
+// backed onto the heater front.
+const FILECAB_NOTE = 'Measured. Against the west end of the desk, backed onto the heater front.';
 
 // Storage pieces being considered, sized from their product listings. Parked on open floor, hidden.
 function storagePieces(){
@@ -511,6 +514,31 @@ const MIGRATIONS = [
       if(!fixed && !kept) return null;
       return `Printer table: ${fixed ? `set to your measured 23.5 × 17.5″ in ${fixed} layout${fixed>1?'s':''}` : ''}${fixed && kept ? '; ' : ''}${kept ? `left ${kept} you had resized unchanged` : ''}`;
   } },
+  { id:'2026-10-01-confirmed-positions', run(store){
+      // Move the printer table and file cabinet to their confirmed spots, but only when a piece is
+      // still at its old guessed spot or already within 3″ of the confirmed one. A piece moved
+      // somewhere else on purpose stays put.
+      const h = ROOM.heater, near = (a, b) => Math.abs(a - b) <= 3;
+      let placed = 0, kept = 0;
+      for(const its of Object.values(store.layouts)) for(const it of its){
+        if(it.id === 'printer'){
+          const eastEdge = it.x + it.w/2;
+          if(it.rot === 0 && (it.x === 67 || near(eastEdge, h.x0))){
+            Object.assign(it, { x:h.x0 - it.w/2, y:ROOM.D - it.d/2, note:PRINTER_NOTE });
+            placed++;
+          } else kept++;
+        }
+        if(it.id === 'filecab-sticker'){
+          const eastEdge = it.x + it.w/2;
+          if(it.rot === 180 && (it.x === 92 + 14.5/2 || near(eastEdge, h.x1))){
+            Object.assign(it, { x:h.x1 - it.w/2, y:h.y0 - it.d/2, est:false, note:FILECAB_NOTE });
+            placed++;
+          } else kept++;
+        }
+      }
+      if(!placed && !kept) return null;
+      return `Placed the printer table and file cabinet where you said they are${kept ? `; left ${kept} you had moved elsewhere unchanged` : ''}`;
+  } },
 ];
 // Later batches of product pages. Fills pieces with no link yet, and replaces a price that only
 // came from a screenshot. A link or price entered by hand is left alone and reported.
@@ -542,7 +570,7 @@ function defaultItems(){
       note:'Size measured (folded as a couch). Position along the wall is a guess.' },
     { id:'ladder', kind:'shelf', name:'Ladder bookshelf', w:24, d:14, h:72, x:84, y:7, rot:0, z:0, color:'#34302c', est:true,
       note:'Size and position estimated from photos. Measure it.' },
-    { id:'printer', kind:'box', name:'Printer table', ...PRINTER_MEASURED, h:26, x:67, rot:0, z:0, color:'#6b4a33', est:true,
+    { id:'printer', kind:'box', name:'Printer table', ...PRINTER_MEASURED, h:26, rot:0, z:0, color:'#6b4a33', est:true,
       note:PRINTER_NOTE },
   ].map(withCatalog);
 }

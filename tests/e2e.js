@@ -307,6 +307,20 @@
       const saved = JSON.parse(localStorage.getItem('office-layout.v1'));
       const edited = saved.layouts.Screenshot?.find(i => i.id === 'printer');
       check('a printer table the user already resized is left alone', edited?.w === 20 && edited?.d === 16, JSON.stringify(edited && { w: edited.w, d: edited.d }));
+
+      // Confirmed positions (Oct 1, 2026): printer table's east side against the heater's west side;
+      // file cabinet against the desk's west end, backed onto the heater front.
+      const heater = o.FIXTURES.find(f => f.part === 'heater').poly;
+      const hx0 = Math.min(...heater.map(p => p[0])), hx1 = Math.max(...heater.map(p => p[0])), hy0 = Math.min(...heater.map(p => p[1]));
+      check('printer table sits against the west side of the heater', !!pt && Math.abs(pt.x + pt.w/2 - hx0) < 0.01, pt && `east edge ${pt.x + pt.w/2}, heater west ${hx0}`);
+      const fc = o.items.find(i => i.id === 'filecab-sticker');
+      check('file cabinet sits against the desk\'s west end (heater east edge)', !!fc && Math.abs(fc.x + fc.w/2 - hx1) < 0.01, fc && `east edge ${fc.x + fc.w/2}, heater east ${hx1}`);
+      check('file cabinet stays backed onto the heater front', !!fc && Math.abs(fc.y + fc.d/2 - hy0) < 0.01, fc && String(fc.y + fc.d/2));
+      check('file cabinet position is no longer marked as an estimate', fc?.est === false);
+      check('placed file cabinet and printer table cause no warnings', !o.problems.probs.some(p => /Printer table|file cabinet/i.test(p)), JSON.stringify(o.problems.probs));
+      // a piece the user moved somewhere else on purpose stays put
+      const movedPt = saved.layouts.Screenshot?.find(i => i.id === 'printer');
+      check('a printer table the user moved elsewhere stays put', movedPt?.x === 30, movedPt && String(movedPt.x));
     }
 
     // --- Rounded bookcase: deeper cabinet, shallower shelves ---
