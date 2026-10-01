@@ -1,0 +1,14 @@
+# Room photos: private. They carry home GPS coordinates and personal items in frame.
+*.HEIC
+*.heic
+*.png
+*.jpg
+*.jpeg
+
+# gstack browser runtime: page logs and local access tokens.
+.gstack/
+
+# Abandoned Sweet Home 3D attempt.
+*.sh3d
+
+.DS_Store

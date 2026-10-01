@@ -1,0 +1,1921 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Office Layout</title>
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#fffdf8; --ink:#1f1d1a; --muted:#6f6a60; --line:#ddd6c8;
+  --accent:#2f6fde; --bad:#c8322b; --badbg:#fdeceb; --ok:#2e7d4f;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:13px; color:var(--ink);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg)}
+body{display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header h1{font-size:15px;margin:0 10px 0 0;font-weight:650}
+header .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+button,select,input{font:inherit;color:inherit}
+button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
+button:hover{border-color:#b9b0a0}
+button.danger{color:var(--bad)}
+button.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+select,input[type=text],input[type=number]{border:1px solid var(--line);border-radius:6px;padding:4px 6px;background:#fff}
+#status{margin-left:auto;color:var(--muted);font-size:12px}
+#status.err{color:var(--bad);font-weight:600}
+main{display:grid;grid-template-columns:300px 1fr;min-height:0}
+aside{overflow:auto;border-right:1px solid var(--line);background:var(--panel);padding:10px 12px 24px}
+aside h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 6px}
+aside h2:first-child{margin-top:4px}
+.palette{display:flex;flex-wrap:wrap;gap:5px}
+.palette button{font-size:12px;padding:3px 7px}
+.list{display:flex;flex-direction:column;gap:2px}
+.list div{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:5px;cursor:pointer}
+.list div:hover{background:#f1ece2}
+.list div.sel{background:#e3ecfb}
+.list div.off{color:var(--muted)}
+.list div.off .sw{opacity:.35}
+.list input[type=checkbox]{margin:0;cursor:pointer}
+.list .sw{width:11px;height:11px;border-radius:3px;border:1px solid #0003;flex:none}
+.list .right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.list .bad{color:var(--bad);font-weight:700}
+.list .price{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.prodlink{font-size:12px;color:var(--muted)}
+.prodlink a{color:var(--accent);font-weight:600;text-decoration:none}
+.budget .total{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.budget .total span{font-size:12px;font-weight:400;color:var(--muted)}
+.budget .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:2px 0;border-bottom:1px solid #f0ebe1}
+.budget .row a{color:var(--accent);text-decoration:none}
+.budget .row b{font-weight:600;font-variant-numeric:tabular-nums}
+.budget .missing{font-size:12px;color:#8a5a00;background:#fdf4e3;border-radius:5px;padding:5px 7px;margin-top:6px}
+.list .est{color:var(--muted);font-size:11px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px}
+.form label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted)}
+.form label.full{grid-column:1/-1}
+.form label.row{flex-direction:row;align-items:center;gap:6px;color:var(--ink);font-size:12px}
+.form input[type=number],.form input[type=text]{width:100%}
+.form input[type=color]{width:100%;height:28px;padding:0 2px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.btnrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.note{font-size:12px;color:var(--muted);background:#f6f2ea;border-radius:6px;padding:6px 8px;margin-top:8px}
+#formErr{color:var(--bad);font-size:12px;font-weight:600;margin-top:6px}
+.problems div{background:var(--badbg);color:var(--bad);border-radius:5px;padding:4px 7px;margin-bottom:3px;font-size:12px}
+.problems .none{background:#e9f4ee;color:var(--ok)}
+details{font-size:12px;color:var(--muted);margin-top:14px}
+details summary{cursor:pointer;color:var(--ink);font-weight:600}
+details li{margin:3px 0}
+.keys{font-size:11.5px;color:var(--muted);line-height:1.6}
+kbd{font:11px ui-monospace,Menlo,monospace;background:#f1ece2;border:1px solid var(--line);border-radius:3px;padding:0 3px}
+.views{display:grid;grid-template-rows:1fr 1fr;min-height:0}
+#planWrap{position:relative;min-height:0}
+#plan{width:100%;height:100%;display:block;background:#faf8f3;touch-action:none;user-select:none}
+#three{position:relative;min-height:0;border-top:1px solid var(--line);overflow:hidden}
+#three canvas{display:block}
+.camBar{position:absolute;top:8px;right:8px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.planBar{position:absolute;top:8px;left:8px}
+.planBar button{background:#fffdf8e6;font-size:12px;padding:3px 8px}
+.camBar button{background:#fffdf8e6;font-size:12px;padding:3px 8px}
+.camBar label{background:#fffdf8e6;border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:12px;display:flex;gap:4px;align-items:center}
+/* plan svg */
+.grid{stroke:#e2d6c0;stroke-width:.25}
+.item polygon{stroke:#2a2622;stroke-width:.35;cursor:grab}
+.item.sel polygon{stroke:var(--accent);stroke-width:.9}
+.item.bad polygon{stroke:var(--bad);stroke-width:1}
+.lbl{font-size:3.3px;fill:#1f1d1a;paint-order:stroke;stroke:#fffdf8;stroke-width:.9px;stroke-linejoin:round;pointer-events:none;text-anchor:middle;font-weight:600}
+.lbl.sm{font-size:2.6px;font-weight:400}
+.wlbl{font-size:2.8px;fill:#6f6a60;text-anchor:middle}
+.rlbl{font-size:3.2px;fill:#1f1d1a;text-anchor:middle;font-weight:600}
+.dim{stroke:var(--accent);stroke-width:.3}
+.dimt{font-size:2.7px;fill:var(--accent);paint-order:stroke;stroke:#faf8f3;stroke-width:.8px;text-anchor:middle;font-weight:600}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<header>
+  <h1>Office Layout</h1>
+  <label>Layout <select id="layoutSel"></select></label>
+  <input type="text" id="newName" placeholder="New layout name" size="16">
+  <button id="saveAs" title="Copy the current layout under a new name">Save as new</button>
+  <button id="delLayout" class="danger">Delete layout</button>
+  <span class="sep"></span>
+  <button id="undo" title="Undo (⌘Z)">Undo</button>
+  <button id="redo" title="Redo (⇧⌘Z)">Redo</button>
+  <button id="reset" title="Replace this layout with the measured room as it is today">Reset to today's room</button>
+  <span class="sep"></span>
+  <button id="export">Export</button>
+  <button id="importBtn">Import</button>
+  <input type="file" id="importFile" accept="application/json" hidden>
+  <span id="status"></span>
+</header>
+<main>
+  <aside>
+    <h2>Add furniture</h2>
+    <div class="palette" id="palette"></div>
+    <h2>In the room</h2>
+    <div class="list" id="itemList"></div>
+    <h2>Selected</h2>
+    <div id="formHost"></div>
+    <h2>Problems</h2>
+    <div class="problems" id="problems"></div>
+    <h2>Budget</h2>
+    <div class="budget" id="budget"></div>
+    <details>
+      <summary>What's measured vs. assumed</summary>
+      <ul>
+        <li><b>Measured by you:</b> room 180″ × 94″ × 96″, all window/door sizes and positions, trim, baseboards, sills, heater size, desk shape and height, futon size.</li>
+        <li><b>Adjusted:</b> heater's east edge sits right where the desk ends (63¾″ from the SE corner), because the desk fits against it exactly.</li>
+        <li><b>Assumed:</b> desk sits ¾″ off the south and east walls (the depth of the trim), since a 30″ desk top can't sit flush against the window casing.</li>
+        <li><b>Assumed:</b> sill horns stick out ¾″ past the casing on each side.</li>
+        <li><b>Estimated:</b> light switch position (just south of the closet casing, 48″ to center).</li>
+        <li><b>Estimated:</b> futon position along the wall; ladder bookshelf and printer table size and position. Dashed outlines mark these.</li>
+        <li><b>Checked:</b> overlaps between pieces, walls, heater, door swings, window sills/aprons/casings, door casings, light switch. Heights count, so a drawer unit under a desk is fine.</li>
+        <li><b>Not checked:</b> baseboards (¾″), desk legs, curtains, outlets, walking space.</li>
+      </ul>
+    </details>
+    <h2>Keys</h2>
+    <div class="keys">
+      Drag to move (snaps to walls and edges; hold <kbd>⌥</kbd> for free movement)<br>
+      <kbd>R</kbd> rotate 90° · <kbd>⇧R</kbd> rotate 15°<br>
+      Arrows nudge ½″ · <kbd>⇧</kbd>+arrows 6″<br>
+      <kbd>⌘D</kbd> duplicate · <kbd>Delete</kbd> remove<br>
+      <kbd>⌘Z</kbd> undo · <kbd>⇧⌘Z</kbd> redo
+    </div>
+  </aside>
+  <div class="views">
+    <div id="planWrap"><svg id="plan" xmlns="http://www.w3.org/2000/svg"></svg><div class="planBar"><button id="flipPlan"></button></div></div>
+    <div id="three">
+      <div class="camBar">
+        <button data-cam="iso">Overview</button>
+        <button data-cam="top">Top</button>
+        <button data-cam="door">From door</button>
+        <button data-cam="desk">From desk</button>
+        <button data-cam="futon">From futon</button>
+        <label><input type="checkbox" id="cutaway" checked> Hide near walls</label>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =====================================================================
+   ROOM — plan coordinates in inches.
+   x runs west → east (0..180), y runs north → south (0..94), z is height.
+   Opening `a` is where the opening starts along its wall (x for N/S walls,
+   y for W/E walls). Sizes are the openings; trim sits outside them.
+   ===================================================================== */
+const ROOM = {
+  W: 180, D: 94, H: 96,
+  wallT: 4,
+  trimW: 3, trimT: 0.75,
+  baseH: 4, baseT: 0.75,
+  stool: { proj: 1.375, thick: 0.75, horn: 0.75 },
+  openings: [
+    { id:'winSE', label:'Desk window',   kind:'window', wall:'S', a:135,  w:35, z:29, h:52 },
+    { id:'winSW', label:'SW window',     kind:'window', wall:'S', a:10,   w:35, z:29, h:52 },
+    { id:'winW',  label:'West window',   kind:'window', wall:'W', a:29,   w:35, z:29, h:52 },
+    { id:'doorN', label:'Entry door',    kind:'door',   wall:'N', a:101,  w:32, z:0,  h:80, hinge:'start' },
+    { id:'doorE', label:'Closet door',   kind:'door',   wall:'E', a:12.5, w:32, z:0,  h:80, hinge:'start' },
+  ],
+  // East edge set to where the desk's west tip ends (desk sits ¾″ off the east wall);
+  // the tape measurement (63″ from the SE corner) was ¾″ off.
+  heater: { x0:98.25, x1:116.25, y0:94-7.25, y1:94, z0:0, z1:32 },
+  lightSwitch: { wall:'E', a0:50.5, a1:53.25, z0:45.75, z1:50.25 },
+};
+const EPS = 0.01;
+const WALLS = {
+  N:{ len:ROOM.W, n:[0, 1], out:[0,-1], c:[ROOM.W/2, 0] },
+  S:{ len:ROOM.W, n:[0,-1], out:[0, 1], c:[ROOM.W/2, ROOM.D] },
+  W:{ len:ROOM.D, n:[1, 0], out:[-1,0], c:[0, ROOM.D/2] },
+  E:{ len:ROOM.D, n:[-1,0], out:[1, 0], c:[ROOM.W, ROOM.D/2] },
+};
+
+// Plan rect on a wall: along a0..a1, offset o0..o1 into the room (negative = inside the wall).
+function wallRectOff(wall, a0, a1, o0, o1){
+  const {W,D} = ROOM;
+  switch(wall){
+    case 'N': return {x0:a0, x1:a1, y0:o0, y1:o1};
+    case 'S': return {x0:a0, x1:a1, y0:D-o1, y1:D-o0};
+    case 'W': return {x0:o0, x1:o1, y0:a0, y1:a1};
+    case 'E': return {x0:W-o1, x1:W-o0, y0:a0, y1:a1};
+  }
+  throw new Error('unknown wall '+wall);
+}
+const wallRect = (wall,a0,a1,depth) => wallRectOff(wall,a0,a1,0,depth);
+function wallPoint(wall, a, off){
+  switch(wall){
+    case 'N': return [a, off];
+    case 'S': return [a, ROOM.D-off];
+    case 'W': return [off, a];
+    case 'E': return [ROOM.W-off, a];
+  }
+  throw new Error('unknown wall '+wall);
+}
+const rectPoly = r => [[r.x0,r.y0],[r.x1,r.y0],[r.x1,r.y1],[r.x0,r.y1]];
+
+function swingPoly(o){
+  const start = o.hinge === 'start';
+  const [hx,hy] = wallPoint(o.wall, start ? o.a : o.a+o.w, 0);
+  const s = start ? 1 : -1;
+  const along = (o.wall==='N'||o.wall==='S') ? [s,0] : [0,s];
+  const n = WALLS[o.wall].n;
+  const pts = [[hx,hy]];
+  for(let i=0;i<=16;i++){
+    const t = i/16*Math.PI/2;
+    pts.push([hx + o.w*(along[0]*Math.cos(t) + n[0]*Math.sin(t)),
+              hy + o.w*(along[1]*Math.cos(t) + n[1]*Math.sin(t))]);
+  }
+  return pts;
+}
+
+// Fixed things furniture can collide with. part: trim | stool | swing | heater | switch
+function buildFixtures(){
+  const out = [];
+  const {trimW:tw, trimT:tt, stool} = ROOM;
+  for(const o of ROOM.openings){
+    const a0 = o.a, a1 = o.a+o.w, top = o.z+o.h;
+    const casing = (lo, hi, z0, z1) => out.push({label:`${o.label} trim`, part:'trim', wall:o.wall, poly:rectPoly(wallRect(o.wall,lo,hi,tt)), z0, z1});
+    if(o.kind === 'window'){
+      out.push({label:`${o.label} sill`, part:'stool', wall:o.wall, poly:rectPoly(wallRect(o.wall, a0-tw-stool.horn, a1+tw+stool.horn, stool.proj)), z0:o.z-stool.thick, z1:o.z});
+      casing(a0-tw, a1+tw, o.z-stool.thick-tw, o.z-stool.thick);   // apron
+      casing(a0-tw, a0, o.z, top); casing(a1, a1+tw, o.z, top);      // side casings
+      casing(a0-tw, a1+tw, top, top+tw);                             // head
+    } else {
+      casing(a0-tw, a0, 0, top+tw); casing(a1, a1+tw, 0, top+tw);
+      casing(a0-tw, a1+tw, top, top+tw);
+      out.push({label:`${o.label} swing`, part:'swing', opening:o, poly:swingPoly(o), z0:0, z1:o.h});
+    }
+  }
+  const h = ROOM.heater;
+  out.push({label:'Heater', part:'heater', poly:rectPoly(h), z0:h.z0, z1:h.z1});
+  const sw = ROOM.lightSwitch;
+  out.push({label:'Light switch', part:'switch', wall:sw.wall, poly:rectPoly(wallRect(sw.wall, sw.a0, sw.a1, 4)), z0:sw.z0, z1:sw.z1});
+  return out;
+}
+const FIXTURES = buildFixtures();
+
+/* ===================== furniture model ===================== */
+const KINDS = { ldesk:'L-desk', desk:'Desk', box:'Box', shelf:'Shelf', glasscab:'Glass cabinet', lowcase:'Low glass case', curio:'Glass curio',
+  cart:'Drawer cabinet', chest:'Drawer chest', bookcab:'Bookcase + cabinet', filehutch:'File cabinet + hutch',
+  cambrie:'Cambrie cabinet', farmfile:'Farmhouse filing cabinet', shaker:'Shaker bookcase', etagere:'Arc etagere', arch:'Arched cabinet',
+  bamboo:'Bamboo etagere', cubes:'Cube bookcase', cornerlamp:'Corner floor lamp', trunk:'Storage chest', cubby:'Cubby bookcase',
+  futon:'Futon', chair:'Chair', rug:'Rug' };
+
+// Fourth batch, from product pages read Oct 1, 2026. Both are low enough to sit under a window sill.
+// Hidden, parked on open floor clear of the furniture you already have.
+function fourthBatch(){
+  return [
+    { id:'chest-trunk', kind:'trunk', name:'Storage chest', w:47.8, d:15.75, h:17.8,
+      x:96, y:53.5, rot:0, z:0, color:'#5a3a26', est:false, hidden:true,
+      note:'Spec-table size (the title says 47.3″ wide). Fluted walnut chest with a lift lid; fits under the window sills.' },
+    { id:'shelf-cubby', kind:'cubby', name:'Cubby bookcase', w:35.43, d:11.81, h:23.62, cols:3, rows:2,
+      x:45, y:62, rot:0, z:0, color:'#6b4630', est:false, hidden:true,
+      note:'Listing size. Six open cubbies, 3 wide × 2 high; fits under the window sills.' },
+  ];
+}
+
+// Third batch of candidates, from product pages read Sep 30, 2026. Hidden; the lamp is parked
+// in the free northwest corner beside the futon, the shelves on open floor.
+function lateAdds(){
+  return [
+    { id:'shelf-bamboo', kind:'bamboo', name:'Bamboo etagere', w:38.6, d:9.8, h:68.9,
+      x:60, y:52, rot:0, z:0, color:'#b5652a', est:false, hidden:true,
+      note:'Listing size. Open bamboo frame with staggered shelves over a low cabinet (two slatted doors, two drawers).' },
+    { id:'shelf-cubes', kind:'cubes', name:'Cube bookcase', w:35.04, d:9.3, h:71.3,
+      x:100, y:40, rot:0, z:0, color:'#1c1c1c', est:false, hidden:true,
+      note:'Listing size, black. Three columns of cubbies; the middle column is a little shorter.' },
+    { id:'lamp-corner', kind:'cornerlamp', name:'Corner floor lamp', w:11.8, d:11.8, h:64,
+      x:5.9, y:5.9, rot:0, z:0, color:'#4a3a30', est:false, hidden:true,
+      note:'Fits into a corner: 11.8″ along each wall. The listing\'s 17″ width is the span across the front.' },
+  ];
+}
+
+// Product pages and prices read from the store. Sale prices change, so each carries the date it was read.
+const PRODUCTS = {
+  'case-low': {
+    url:'https://www.wayfair.com/furniture/pdp/wrought-studio-59-w-clear-display-cabinet-with-body-sensor-rgb-light-and-buit-in-charging-station-modern-2-tiers-curio-cabinet-with-tempered-glass-w117240010.html?piid=774233211',
+    price:199.99, priceNote:'Wayfair sale price on Sep 30, 2026 (was $259.00).' },
+  'store-filehutch': {
+    url:'https://www.wayfair.com/furniture/pdp/inbox-zero-2-drawer-file-cabinet-with-lock-wooden-filing-cabinet-fits-legallettera4-size-files-farmhouse-printer-stand-cabinet-with-open-storage-shelves-for-home-office-white-w122272656.html?piid=532979792',
+    price:155.99, priceNote:'Wayfair sale price on Sep 30, 2026, black (was $259.99).' },
+  'case-sideboard': {
+    url:'https://www.wayfair.com/furniture/pdp/orren-ellis-industrial-lighted-glass-display-stand-w113174017.html?piid=564035962',
+    price:246.99, priceNote:'Orren Ellis Industrial Lighted Glass Display Stand. Wayfair sale price on Sep 30, 2026 (was $796.00).' },
+  'case-curio': {
+    url:'https://www.wayfair.com/furniture/pdp/wrought-studio-5-shelve-glass-display-cabinet-w114438607.html?piid=1858032718',
+    price:169.99, priceNote:'Wrought Studio 5-Shelf Glass Display Cabinet. Wayfair sale price on Sep 30, 2026 (was $199.99).' },
+  'store-cart': {
+    url:'https://www.wayfair.com/organization-storage/pdp/latitude-run-comacho-5-drawer-mobile-cabinet-charcoal-w114483533.html',
+    price:129.99, priceNote:'Latitude Run Comacho 5-Drawer Mobile Cabinet, Charcoal. Wayfair sale price on Sep 30, 2026 (was $146.99). Listing says 26.3 × 19 × 15.98″.' },
+  'store-chest': {
+    url:'https://www.wayfair.com/furniture/pdp/red-barrel-studio-wylde-4-drawer-vertical-filing-cabinet-w110213173.html?piid=1572695913',
+    price:184.99, priceNote:'Red Barrel Studio Wylde 4-Drawer Vertical Filing Cabinet. Wayfair sale price on Sep 30, 2026 (was $204.99).' },
+  'store-bookcase': {
+    url:'https://www.wayfair.com/furniture/pdp/ebern-designs-71-tall-bookshelf-with-storage-cabinet-w112629011.html?piid=792355834',
+    price:169.99, priceNote:'Ebern Designs 71″ Tall Bookshelf with Storage Cabinet. Wayfair price on Sep 30, 2026. The listing\'s 11.81″ depth is the shelves only.' },
+  'cab-farmhouse': {
+    url:'https://www.wayfair.com/furniture/pdp/trent-austin-design-nguyen-farmhouse-lateral-filing-cabinet-w008012808.html',
+    price:169.99, priceNote:'Trent Austin Design Nguyen Farmhouse Lateral Filing Cabinet. Wayfair sale price on Sep 30, 2026 (was $408.00).' },
+  'shelf-shaker': {
+    url:'https://www.wayfair.com/furniture/pdp/latitude-run-classic-shaker-style-solid-wood-bookcase-w113145562.html?piid=1196433174%2C1175095425',
+    price:293.99, priceNote:'Latitude Run Classic Shaker Style Solid Wood Bookcase, Rich Brown, 6 shelves. Wayfair sale price on Sep 30, 2026 (was $329.99).' },
+  'shelf-arc': {
+    url:'https://www.wayfair.com/furniture/pdp/trent-austin-design-pharr-705-h-x-315-w-bookcase-w100028259.html?piid=311749390',
+    price:179.99, priceNote:'Trent Austin Design Pharr Geometric Bookcase. Wayfair price on Sep 30, 2026. The link opens the "Rustic" color; check it is the one you want.' },
+  'cab-arched': {
+    url:'https://www.wayfair.com/furniture/pdp/gracie-oaks-kalaen-69-arched-display-wood-cabinet-adjustable-shelves-w113272212.html?piid=1755243369',
+    price:202.99, priceNote:'Gracie Oaks Kalaen 69″ Arched Display Cabinet. Wayfair sale price on Sep 30, 2026 (was $429.99).' },
+  'shelf-bamboo': {
+    url:'https://www.wayfair.com/furniture/pdp/monibloom-6-tier-etagere-bookcase-freestanding-open-bookshelf-bamboo-staggered-shelving-display-shelf-with-drawers-mnib1417.html',
+    price:104.99, priceNote:'MoNiBloom 6-Tier Etagere Bookcase. Wayfair sale price on Sep 30, 2026 (was $219.99).' },
+  'shelf-cubes': {
+    url:'https://www.wayfair.com/furniture/pdp/wade-logan-beetner-713h-8-tier-cube-bookcase-media-storage-shelves-adjustable-shelves-w110262558.html?piid=2014795410',
+    price:116.99, priceNote:'Wade Logan Beetner 8-Tier Cube Bookcase, Black. Wayfair sale price on Sep 30, 2026 (was $249.99).' },
+  'lamp-corner': {
+    url:'https://www.wayfair.com/lighting/pdp/wade-logan-carrye-64-led-dimmable-cornor-floor-lamp-with-shelves-w110528988.html?piid=1741076529',
+    price:87.99, priceNote:'Wade Logan Carrye 64″ LED Corner Floor Lamp with Shelves. Wayfair sale price on Sep 30, 2026 (was $98.99).' },
+  'chest-trunk': {
+    url:'https://www.wayfair.com/storage-organization/pdp/latitude-run-473-extra-large-storage-chest-wooden-storage-trunk-with-safety-hinges-upholstered-storage-bench-organizer-for-living-room-entryway-w119652396.html?piid=1987823279',
+    price:183.99, priceNote:'Latitude Run 47.3″ Extra Large Storage Chest, walnut. Wayfair sale price on Oct 1, 2026 (was $537.77).' },
+  'shelf-cubby': {
+    url:'https://www.wayfair.com/furniture/pdp/17-stories-spacious-wooden-bookcases-walnut-finish-rustic-home-storage-w119556093.html',
+    price:129.99, priceNote:'17 Stories Spacious Wooden Bookcase, walnut finish. Wayfair price on Oct 1, 2026.' },
+  'cab-cambrie': {
+    url:'https://www.wayfair.com/furniture/pdp/millwood-pines-cambrie-31-w-3-drawer-mobile-lateral-filing-cabinet-w005165895.html?piid=1255169322',
+    price:83.99, priceNote:'Millwood Pines Cambrie 31″ W 3-Drawer Mobile Lateral Filing Cabinet. Wayfair sale price on Sep 30, 2026 (was $128.99).' },
+};
+// A price that came from a screenshot rather than a product page; a later upgrade may replace it.
+const isScreenshotPrice = it => typeof it.priceNote === 'string' && it.priceNote.startsWith('From your screenshot');
+// Furniture already in the room: never counted in the budget.
+const OWNED_IDS = ['desk', 'futon', 'ladder', 'printer', 'filecab-sticker'];
+const withCatalog = it => ({ ...it, ...(OWNED_IDS.includes(it.id) ? { owned:true } : {}), ...(PRODUCTS[it.id] || {}) });
+
+// Tall shelving being considered, sized from product listings. Parked on open floor, hidden.
+function tallShelving(){
+  return [
+    { id:'shelf-shaker', kind:'shaker', name:'Shaker bookcase', w:30, d:13.25, h:72,
+      x:60, y:62, rot:0, z:0, color:'#4a3326', est:false, hidden:true,
+      note:'Listing size (6-shelf, 72″ version).' },
+    { id:'shelf-arc', kind:'etagere', name:'Arc etagere', w:31.5, d:11.8, h:70.5,
+      x:100, y:50, rot:0, z:0, color:'#5b5550', est:false, hidden:true,
+      note:'Listing size. Black metal frame with an arc and staggered shelves; open on all sides.' },
+    { id:'cab-arched', kind:'arch', name:'Arched cabinet', w:31.5, d:15.7, h:69.3,
+      x:140, y:54, rot:0, z:0, color:'#7b5a3c', est:false, hidden:true,
+      note:'Listing size. Collision treats it as a full box, including the empty corners beside the arch.' },
+  ];
+}
+
+// The 3-drawer file cabinet already in the room, backed up against the front of the heater.
+function stickerFileCabinet(){
+  return { id:'filecab-sticker', kind:'cart', name:'3-drawer file cabinet', w:14.5, d:19, h:28, drawers:3, casterH:0,
+    x:92 + 14.5/2, y:ROOM.heater.y0 - 19/2, rot:180, z:0, color:'#8a2f2f', est:true,
+    note:'Size measured. Backed against the heater front; position along the wall estimated from photo IMG_6235.' };
+}
+// More cabinets being considered, sized from their product listings. Parked on open floor, hidden.
+function moreCabinets(){
+  return [
+    { id:'cab-cambrie', kind:'cambrie', name:'Cambrie cabinet', w:31, d:16, h:26, casterH:2.5,
+      x:45, y:62, rot:0, z:0, color:'#7a5230', est:false, hidden:true,
+      note:'Listing size. Rolls on casters; two drawers and a file drawer beside open cubbies.' },
+    { id:'cab-farmhouse', kind:'farmfile', name:'Farmhouse filing cabinet', w:31.5, d:20, h:29.5, legH:3.5,
+      x:45, y:80, rot:0, z:0, color:'#8a7155', est:false, hidden:true,
+      note:'Listing size. At 29.5″ it is taller than the 28¼″ window sills.' },
+  ];
+}
+
+// The rounded bookcase's cabinet is deeper than its shelves: 11.81″ shelves on a cabinet
+// ~15.75″ deep (the listing's inside cabinet depth is 15.43″).
+const BOOKCASE_DEPTHS = { d:15.75, upperD:11.81 };
+const BOOKCASE_NOTE = 'Listing size. The cabinet (~15.75″ deep) sticks out past the 11.81″-deep shelves above it.';
+
+// Storage pieces being considered, sized from their product listings. Parked on open floor, hidden.
+function storagePieces(){
+  return [
+    { id:'store-cart', kind:'cart', name:'Drawer cart', w:19.25, d:16, h:26.25, casterH:2.25,
+      x:131.625, y:83, rot:180, z:0, color:'#5a5856', est:false, hidden:true,
+      note:'Listing size. 26¼″ tall, so it rolls under the 30″ desk (29″ underside). Drawers face into the room.' },
+    { id:'store-chest', kind:'chest', name:'Drawer chest', w:21.26, d:17.71, h:51.18,
+      x:80, y:62, rot:0, z:0, color:'#1f1f1f', est:false, hidden:true,
+      note:'Listing size (top and base). The body between them is slightly smaller.' },
+    { id:'store-bookcase', kind:'bookcab', name:'Bookcase + cabinet', ...BOOKCASE_DEPTHS, w:31.5, h:70.87,
+      legH:6.02, cabH:14.57, r:3,
+      x:110, y:50, rot:0, z:0, color:'#7a4a2c', est:false, hidden:true,
+      note:BOOKCASE_NOTE },
+    { id:'store-filehutch', kind:'filehutch', name:'File cabinet + hutch', w:19.7, d:15.7, h:65, baseH:30.7, hutchD:7.9,
+      x:84, y:40, rot:0, z:0, color:'#1f1f1f', est:false, hidden:true,
+      note:'Listing size. The hutch is only 7.9″ deep, so the space in front of it above the file base counts as free.' },
+  ];
+}
+
+// The three glass display cases being considered, sized from their product listings.
+function displayCases(){
+  return [
+    { id:'case-sideboard', kind:'glasscab', name:'Glass cabinet', w:55.1, d:15.7, h:29.5, legH:3.9,
+      x:27.55, y:94-1.375-7.85, rot:0, z:0, color:'#1c1c1c', est:false, hidden:false,
+      note:'Listing size. Pulled 1⅜″ off the south wall: its 29.5″ top is taller than the 28¼″ window sill.' },
+    { id:'case-low', kind:'lowcase', name:'Low glass case', w:59, d:13.8, h:23.6, baseH:1.9, topT:1.7,
+      x:29.5, y:94-6.9, rot:0, z:0, color:'#1c1c1c', est:false, hidden:true,
+      note:'Listing size. At 23.6″ it fits under the window sills, so it can sit flush to the wall.' },
+    { id:'case-curio', kind:'curio', name:'Glass curio', w:19.69, d:15.75, h:70.87, baseH:3.15, split:33.66,
+      x:15.75/2, y:92.625-19.69/2, rot:90, z:0, color:'#1c1c1c', est:false, hidden:true,
+      note:'Listing size. Collision uses the 19.69 × 15.75″ crown; the base is 18.5 × 14.57″.' },
+  ];
+}
+
+// One-time changes to saved layouts. Each runs once per browser and says what it did.
+const MIGRATIONS = [
+  { id:'2026-09-25-display-cases', run(store){
+      let added = 0;
+      for(const its of Object.values(store.layouts))
+        for(const c of displayCases()) if(!its.some(i => i.id === c.id)){ its.push(c); added++; }
+      return added ? `Added the 3 glass display cases to your layouts (the low case and curio start hidden)` : null;
+  } },
+  { id:'2026-09-25-storage-pieces', run(store){
+      let added = 0;
+      for(const its of Object.values(store.layouts))
+        for(const c of storagePieces()) if(!its.some(i => i.id === c.id)){ its.push(c); added++; }
+      return added ? `Added 4 storage pieces to your layouts, hidden: drawer cart, drawer chest, bookcase + cabinet, file cabinet + hutch` : null;
+  } },
+  { id:'2026-09-25-cabinets', run(store){
+      let added = 0;
+      for(const its of Object.values(store.layouts))
+        for(const c of [stickerFileCabinet(), ...moreCabinets()]) if(!its.some(i => i.id === c.id)){ its.push(c); added++; }
+      return added ? `Added your 3-drawer file cabinet (shown, in front of the heater) plus the Cambrie and farmhouse cabinets (hidden)` : null;
+  } },
+  { id:'2026-09-25-bookcase-depth', run(store){
+      // Only replace the old guessed depths; leave a bookcase the user has already edited alone.
+      let fixed = 0, kept = 0;
+      for(const its of Object.values(store.layouts)) for(const it of its){
+        if(it.id !== 'store-bookcase') continue;
+        if(it.d === 16.5 && it.upperD === 15.75){ Object.assign(it, BOOKCASE_DEPTHS, { est:false, note:BOOKCASE_NOTE }); fixed++; }
+        else kept++;
+      }
+      if(!fixed && !kept) return null;
+      return `Bookcase depth: ${fixed ? `updated to 15.75″ cabinet / 11.81″ shelves in ${fixed} layout${fixed>1?'s':''}` : ''}${fixed && kept ? '; ' : ''}${kept ? `left ${kept} edited cop${kept>1?'ies':'y'} unchanged` : ''}`;
+  } },
+  { id:'2026-09-25-tall-shelving', run(store){
+      let added = 0;
+      for(const its of Object.values(store.layouts))
+        for(const c of tallShelving()) if(!its.some(i => i.id === c.id)){ its.push(c); added++; }
+      return added ? `Added the Shaker bookcase, arc etagere and arched cabinet (hidden)` : null;
+  } },
+  { id:'2026-09-30-prices', run(store){
+      // Fill in only what is missing, so a price or link the user already entered is never overwritten.
+      let priced = 0, owned = 0;
+      for(const its of Object.values(store.layouts)) for(const it of its){
+        if(OWNED_IDS.includes(it.id) && it.owned === undefined){ it.owned = true; owned++; }
+        const p = PRODUCTS[it.id];
+        if(p && it.price === undefined && !it.url){ Object.assign(it, p); priced++; }
+      }
+      return (priced || owned) ? `Budget: added ${priced} product price${priced===1?'':'s'} and links; marked ${owned} piece${owned===1?'':'s'} you already own` : null;
+  } },
+  { id:'2026-09-30-prices-2', run:fillProducts },
+  { id:'2026-09-30-prices-3', run:fillProducts },   // Cambrie cabinet link
+  { id:'2026-09-30-late-adds', run(store){
+      let added = 0;
+      for(const its of Object.values(store.layouts))
+        for(const c of lateAdds()) if(!its.some(i => i.id === c.id)){ its.push(withCatalog(c)); added++; }
+      return added ? `Added the bamboo etagere, black cube bookcase and corner floor lamp (hidden, priced)` : null;
+  } },
+  { id:'2026-10-01-fourth-batch', run(store){
+      let added = 0;
+      for(const its of Object.values(store.layouts))
+        for(const c of fourthBatch()) if(!its.some(i => i.id === c.id)){ its.push(withCatalog(c)); added++; }
+      return added ? `Added the storage chest and cubby bookcase (hidden, priced)` : null;
+  } },
+];
+// Later batches of product pages. Fills pieces with no link yet, and replaces a price that only
+// came from a screenshot. A link or price entered by hand is left alone and reported.
+function fillProducts(store){
+  let priced = 0, kept = 0;
+  for(const its of Object.values(store.layouts)) for(const it of its){
+    const p = PRODUCTS[it.id];
+    if(!p || it.url === p.url) continue;
+    if(!it.url && (it.price === undefined || isScreenshotPrice(it))){ Object.assign(it, p); priced++; }
+    else kept++;
+  }
+  if(!priced && !kept) return null;
+  return `Budget: added ${priced} product link${priced===1?'':'s'} and price${priced===1?'':'s'}${kept ? `; left ${kept} you had edited unchanged` : ''}`;
+}
+
+function defaultItems(){
+  return [
+    stickerFileCabinet(),
+    ...displayCases(),
+    ...storagePieces(),
+    ...moreCabinets(),
+    ...tallShelving(),
+    ...lateAdds(),
+    ...fourthBatch(),
+    { id:'desk', kind:'ldesk', name:'L-desk', w:63, d:48, h:30, top:1, wingA:31, wingB:23.5, curve:14, mirror:false,
+      x:180-0.75-31.5, y:94-0.75-24, rot:0, z:0, color:'#c8874a', est:false,
+      note:'Measured. Placed ¾″ off the south and east walls (see assumptions).' },
+    { id:'futon', kind:'futon', name:'Futon', w:57, d:47, h:41, x:14+28.5, y:23.5, rot:0, z:0, color:'#3d4556', est:true,
+      note:'Size measured (folded as a couch). Position along the wall is a guess.' },
+    { id:'ladder', kind:'shelf', name:'Ladder bookshelf', w:24, d:14, h:72, x:84, y:7, rot:0, z:0, color:'#34302c', est:true,
+      note:'Size and position estimated from photos. Measure it.' },
+    { id:'printer', kind:'box', name:'Printer table', w:24, d:16, h:26, x:67, y:86, rot:0, z:0, color:'#6b4a33', est:true,
+      note:'Size and position estimated from photos. Measure it.' },
+  ].map(withCatalog);
+}
+
+const PRESETS = [
+  { label:'Desk 72×30', kind:'desk', name:'Desk', w:72, d:30, h:30, top:1, color:'#b98552' },
+  { label:'Desk 60×30', kind:'desk', name:'Desk', w:60, d:30, h:30, top:1, color:'#b98552' },
+  { label:'Desk 48×24', kind:'desk', name:'Desk', w:48, d:24, h:30, top:1, color:'#b98552' },
+  { label:'L-desk', kind:'ldesk', name:'L-desk', w:63, d:48, h:30, top:1, wingA:31, wingB:23.5, curve:14, mirror:false, color:'#b98552' },
+  { label:'Bookshelf', kind:'shelf', name:'Bookshelf', w:30, d:12, h:72, color:'#3a3632' },
+  { label:'Glass cabinet', kind:'glasscab', name:'Glass cabinet', w:55.1, d:15.7, h:29.5, legH:3.9, color:'#1c1c1c' },
+  { label:'Low glass case', kind:'lowcase', name:'Low glass case', w:59, d:13.8, h:23.6, baseH:1.9, topT:1.7, color:'#1c1c1c' },
+  { label:'Drawer cart', kind:'cart', name:'Drawer cart', w:19.25, d:16, h:26.25, casterH:2.25, color:'#5a5856' },
+  { label:'Cambrie cabinet', kind:'cambrie', name:'Cambrie cabinet', w:31, d:16, h:26, casterH:2.5, color:'#7a5230' },
+  { label:'Farmhouse filing cabinet', kind:'farmfile', name:'Farmhouse filing cabinet', w:31.5, d:20, h:29.5, legH:3.5, color:'#8a7155' },
+  { label:'Drawer chest', kind:'chest', name:'Drawer chest', w:21.26, d:17.71, h:51.18, color:'#1f1f1f' },
+  { label:'Bookcase + cabinet', kind:'bookcab', name:'Bookcase + cabinet', ...BOOKCASE_DEPTHS, w:31.5, h:70.87, legH:6.02, cabH:14.57, r:3, color:'#7a4a2c' },
+  { label:'Shaker bookcase', kind:'shaker', name:'Shaker bookcase', w:30, d:13.25, h:72, color:'#4a3326' },
+  { label:'Arc etagere', kind:'etagere', name:'Arc etagere', w:31.5, d:11.8, h:70.5, color:'#5b5550' },
+  { label:'Bamboo etagere', kind:'bamboo', name:'Bamboo etagere', w:38.6, d:9.8, h:68.9, color:'#b5652a' },
+  { label:'Cube bookcase', kind:'cubes', name:'Cube bookcase', w:35.04, d:9.3, h:71.3, color:'#1c1c1c' },
+  { label:'Corner floor lamp', kind:'cornerlamp', name:'Corner floor lamp', w:11.8, d:11.8, h:64, color:'#4a3a30' },
+  { label:'Storage chest', kind:'trunk', name:'Storage chest', w:47.8, d:15.75, h:17.8, color:'#5a3a26' },
+  { label:'Cubby bookcase', kind:'cubby', name:'Cubby bookcase', w:35.43, d:11.81, h:23.62, cols:3, rows:2, color:'#6b4630' },
+  { label:'Arched cabinet', kind:'arch', name:'Arched cabinet', w:31.5, d:15.7, h:69.3, color:'#7b5a3c' },
+  { label:'File cabinet + hutch', kind:'filehutch', name:'File cabinet + hutch', w:19.7, d:15.7, h:65, baseH:30.7, hutchD:7.9, color:'#1f1f1f' },
+  { label:'Glass curio', kind:'curio', name:'Glass curio', w:19.69, d:15.75, h:70.87, baseH:3.15, split:33.66, color:'#1c1c1c' },
+  { label:'Drawer unit', kind:'box', name:'Drawers', w:16, d:20, h:26, color:'#8a8f96' },
+  { label:'Cabinet', kind:'box', name:'Cabinet', w:36, d:18, h:30, color:'#6b5b4b' },
+  { label:'Chair', kind:'chair', name:'Chair', w:26, d:26, h:40, color:'#2b2b2b' },
+  { label:'Rug', kind:'rug', name:'Rug', w:60, d:36, h:0.4, color:'#cdbb97' },
+  { label:'Custom box', kind:'box', name:'Item', w:24, d:24, h:30, color:'#9aa5b1' },
+];
+
+const newId = () => 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const clone = o => JSON.parse(JSON.stringify(o));
+
+// Local polygon, centered on the item (before rotation).
+function localPoly(it){
+  let pts;
+  if(it.kind === 'ldesk'){
+    const {w, d, wingA:a, wingB:b, curve:c} = it;
+    const ix = w-b, iy = d-a;
+    pts = [[ix,0],[w,0],[w,d],[0,d],[0,iy],[ix-c,iy]];
+    for(let i=1;i<16;i++){           // quadratic curve (ix-c,iy) → (ix,0), control (ix,iy)
+      const t=i/16, u=1-t;
+      pts.push([u*u*(ix-c) + 2*u*t*ix + t*t*ix, u*u*iy + 2*u*t*iy]);
+    }
+    if(it.mirror) pts = pts.map(([x,y]) => [w-x, y]).reverse();
+  } else if(it.kind === 'bookcab'){
+    pts = roundedFrontRect(it.w, it.d, it.r);
+  } else if(it.kind === 'cornerlamp'){
+    pts = cornerPentagon(it.w, it.d);
+  } else {
+    pts = rectPts(it.w, it.d);
+  }
+  return pts.map(([x,y]) => [x-it.w/2, y-it.d/2]);
+}
+const rectPts = (w, d) => [[0,0],[w,0],[w,d],[0,d]];
+// Corner piece: fits into the corner at (0,0), w along one wall and d along the other,
+// with a diagonal front and short 1.5″ side faces.
+const cornerPentagon = (w, d, s = 1.5) => [[0,0],[w,0],[w,s],[s,d],[0,d]];
+// Back edge at y=0 (against the wall), front edge at y=d with its two corners rounded.
+function roundedFrontRect(w, d, r){
+  const pts = [[0,0],[w,0]];
+  for(let i=0;i<=8;i++){ const t = i/8*Math.PI/2; pts.push([w-r + r*Math.cos(t), d-r + r*Math.sin(t)]); }
+  for(let i=0;i<=8;i++){ const t = Math.PI/2 + i/8*Math.PI/2; pts.push([r + r*Math.cos(t), d-r + r*Math.sin(t)]); }
+  return pts;
+}
+function toWorld(it, lx, ly){
+  const t = it.rot*Math.PI/180, c = Math.cos(t), s = Math.sin(t);
+  return [it.x + lx*c - ly*s, it.y + lx*s + ly*c];
+}
+const worldPoly = it => localPoly(it).map(([x,y]) => toWorld(it,x,y));
+function bbox(poly){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const [x,y] of poly){ x0=Math.min(x0,x); y0=Math.min(y0,y); x1=Math.max(x1,x); y1=Math.max(y1,y); }
+  return {x0,y0,x1,y1};
+}
+// Height band used for collisions. Desks only count their top, so things can sit underneath.
+function zRange(it){
+  const z = it.z || 0;
+  if(it.kind==='ldesk' || it.kind==='desk') return [z+it.h-it.top, z+it.h];
+  if(it.kind==='chair') return [z, z+Math.min(it.h, 18)];
+  return [z, z+it.h];
+}
+const collides = it => it.kind !== 'rug';
+// The solid parts of a piece for collision checks: a footprint (local, centered) plus a height band.
+// Most pieces are one part. Stepped pieces (a shallow hutch or bookcase on a deeper base) are two,
+// so the space in front of the upper part stays free.
+function collisionParts(it){
+  const z = it.z || 0, center = pts => pts.map(([x,y]) => [x-it.w/2, y-it.d/2]);
+  if(it.kind === 'filehutch') return [
+    { what:'file base', poly:localPoly(it), z0:z, z1:z+it.baseH },
+    { what:'hutch', poly:center(rectPts(it.w, it.hutchD)), z0:z+it.baseH, z1:z+it.h },
+  ];
+  if(it.kind === 'bookcab'){
+    const top = it.legH + it.cabH;
+    return [
+      { what:'cabinet', poly:localPoly(it), z0:z, z1:z+top },
+      { what:'shelves', poly:center(rectPts(it.w, it.upperD)), z0:z+top, z1:z+it.h },
+    ];
+  }
+  const [z0,z1] = zRange(it);
+  return [{ what:'', poly:localPoly(it), z0, z1 }];
+}
+const worldParts = it => collisionParts(it).map(p => ({ ...p, poly:p.poly.map(([x,y]) => toWorld(it,x,y)) }));
+
+function validateDims(it){
+  const pos = (k,label) => (!Number.isFinite(it[k]) || it[k] <= 0) ? `${label} must be a number above 0` : null;
+  const err = pos('w','Width') || pos('d','Depth') || pos('h','Height');
+  if(err) return err;
+  if(!Number.isFinite(it.z) || it.z < 0) return 'Off-floor height must be 0 or more';
+  if(!Number.isFinite(it.rot)) return 'Rotation must be a number';
+  if(it.kind==='ldesk' || it.kind==='desk'){
+    if(!Number.isFinite(it.top) || it.top <= 0 || it.top >= it.h) return 'Top thickness must be above 0 and less than the height';
+  }
+  if(it.kind==='glasscab'){
+    if(!Number.isFinite(it.legH) || it.legH < 0 || it.legH > it.h - 3) return 'Leg height must be 0 or more and leave at least 3″ of cabinet';
+  }
+  if(it.kind==='lowcase' || it.kind==='curio'){
+    if(!Number.isFinite(it.baseH) || it.baseH < 0 || it.baseH > it.h - 6) return 'Base height must be 0 or more and leave at least 6″ of case';
+  }
+  if(it.kind==='lowcase'){
+    if(!Number.isFinite(it.topT) || it.topT <= 0 || it.topT > it.h - it.baseH - 3) return 'Top thickness must be above 0 and leave room for the glass';
+  }
+  if(it.kind==='cart' || it.kind==='cambrie'){
+    if(!Number.isFinite(it.casterH) || it.casterH < 0 || it.casterH > it.h - 6) return 'Caster height must be 0 or more and leave at least 6″ of cabinet';
+  }
+  if(it.kind==='cart' && it.drawers !== undefined && !(Number.isInteger(it.drawers) && it.drawers >= 1 && it.drawers <= 10)) return 'Drawers must be a whole number from 1 to 10';
+  if(it.kind==='farmfile'){
+    if(!Number.isFinite(it.legH) || it.legH < 0 || it.legH > it.h - 8) return 'Leg height must be 0 or more and leave at least 8″ of cabinet';
+  }
+  if(it.kind==='chest' && it.h < 16) return 'Height must be at least 16″ for the drawers and cubby';
+  if(it.kind==='bookcab'){
+    if(!(it.upperD > 0 && it.upperD <= it.d)) return 'Shelf depth must be above 0 and no more than the cabinet depth';
+    if(!(it.r >= 0 && it.r < Math.min(it.w, it.d)/2)) return 'Corner radius must be less than half the width and depth';
+    if(!(it.legH >= 0 && it.cabH > 2 && it.legH + it.cabH < it.h - 6)) return 'Legs plus cabinet must leave at least 6″ of shelves';
+  }
+  if(it.kind==='cornerlamp' && (it.w < 3 || it.d < 3)) return 'A corner piece needs at least 3″ along each wall';
+  if(it.kind==='cubby'){
+    for(const [k, label] of [['cols','Columns'], ['rows','Rows']])
+      if(it[k] !== undefined && !(Number.isInteger(it[k]) && it[k] >= 1 && it[k] <= 8)) return `${label} must be a whole number from 1 to 8`;
+  }
+  if(it.kind==='filehutch'){
+    if(!(it.baseH > 2 && it.baseH < it.h - 3)) return 'File base height must be between 2″ and 3″ less than the total';
+    if(!(it.hutchD > 0 && it.hutchD <= it.d)) return 'Hutch depth must be above 0 and no more than the base depth';
+  }
+  if(it.kind==='curio'){
+    if(!Number.isFinite(it.split) || it.split <= it.baseH || it.split >= it.h - 3) return 'Divider height must sit between the base and the top';
+  }
+  if(it.kind==='ldesk'){
+    if(!(it.wingA > 0 && it.wingA < it.d)) return 'Long wing depth must be between 0 and the short side';
+    if(!(it.wingB > 0 && it.wingB < it.w)) return 'Short wing depth must be between 0 and the long side';
+    if(!(it.curve >= 0 && it.curve <= it.w - it.wingB)) return `Cutout curve must be between 0 and ${+(it.w-it.wingB).toFixed(2)}″`;
+  }
+  return null;
+}
+function validateItem(it, where){
+  if(!it || typeof it !== 'object') throw new Error(`${where}: not an object`);
+  if(typeof it.id !== 'string' || !it.id) throw new Error(`${where}: missing id`);
+  if(typeof it.name !== 'string') throw new Error(`${where}: missing name`);
+  if(!KINDS[it.kind]) throw new Error(`${where}: unknown kind "${it.kind}"`);
+  for(const k of ['x','y']) if(!Number.isFinite(it[k])) throw new Error(`${where}: ${k} is not a number`);
+  const e = validateDims(it);
+  if(e) throw new Error(`${where}: ${e}`);
+  if(typeof it.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(it.color)) throw new Error(`${where}: bad color`);
+  if(it.hidden !== undefined && typeof it.hidden !== 'boolean') throw new Error(`${where}: "hidden" must be true or false`);
+  if(it.owned !== undefined && typeof it.owned !== 'boolean') throw new Error(`${where}: "owned" must be true or false`);
+  if(it.price !== undefined && !(Number.isFinite(it.price) && it.price >= 0)) throw new Error(`${where}: price must be a number, 0 or more`);
+  if(it.url !== undefined && (typeof it.url !== 'string' || (it.url && !/^https?:\/\//i.test(it.url)))) throw new Error(`${where}: link must start with http:// or https://`);
+}
+function validateStore(data){
+  if(!data || typeof data !== 'object' || !data.layouts || typeof data.layouts !== 'object') throw new Error('no layouts in file');
+  const names = Object.keys(data.layouts);
+  if(!names.length) throw new Error('file has zero layouts');
+  for(const n of names){
+    if(!Array.isArray(data.layouts[n])) throw new Error(`layout "${n}" is not a list`);
+    data.layouts[n].forEach((it,i) => validateItem(it, `layout "${n}", item ${i+1}`));
+  }
+}
+
+/* ===================== geometry tests ===================== */
+const orient = (a,b,c) => (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]);
+function segCross(p1,p2,q1,q2){
+  const e = 1e-6;
+  const d1=orient(q1,q2,p1), d2=orient(q1,q2,p2), d3=orient(p1,p2,q1), d4=orient(p1,p2,q2);
+  return ((d1>e&&d2<-e)||(d1<-e&&d2>e)) && ((d3>e&&d4<-e)||(d3<-e&&d4>e));
+}
+function distSeg(p,a,b){
+  const dx=b[0]-a[0], dy=b[1]-a[1], L=dx*dx+dy*dy;
+  let t = L ? ((p[0]-a[0])*dx + (p[1]-a[1])*dy)/L : 0;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p[0]-a[0]-t*dx, p[1]-a[1]-t*dy);
+}
+function strictlyInside(p, poly){
+  let inside = false;
+  for(let i=0, j=poly.length-1; i<poly.length; j=i++){
+    if(distSeg(p, poly[j], poly[i]) < EPS) return false;
+    const [xi,yi]=poly[i], [xj,yj]=poly[j];
+    if(((yi>p[1]) !== (yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) inside = !inside;
+  }
+  return inside;
+}
+function probes(P){
+  const out = [...P];
+  for(let i=0;i<P.length;i++){
+    const a=P[i], b=P[(i+1)%P.length], m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    out.push(m);
+    const len=Math.hypot(b[0]-a[0], b[1]-a[1]) || 1;
+    for(const s of [1,-1]){
+      const q=[m[0] - s*(b[1]-a[1])/len*0.05, m[1] + s*(b[0]-a[0])/len*0.05];
+      if(strictlyInside(q, P)) out.push(q);
+    }
+  }
+  return out;
+}
+function polysOverlap(A,B){
+  for(let i=0;i<A.length;i++) for(let j=0;j<B.length;j++)
+    if(segCross(A[i],A[(i+1)%A.length],B[j],B[(j+1)%B.length])) return true;
+  if(probes(A).some(p => strictlyInside(p,B))) return true;
+  if(probes(B).some(p => strictlyInside(p,A))) return true;
+  return false;
+}
+const zOverlap = (a0,a1,b0,b1) => a0 < b1-EPS && b0 < a1-EPS;
+
+// Hidden pieces keep their place in the layout but drop out of the plan, 3D and collision checks.
+const shownItems = () => items.filter(i => !i.hidden);
+
+function findProblems(){
+  const probs = [], bad = new Set();
+  const vis = shownItems();
+  const parts = new Map(vis.map(it => [it.id, worldParts(it)]));
+  const hit = (pa, pb) => pa.some(a => pb.some(b => zOverlap(a.z0,a.z1,b.z0,b.z1) && polysOverlap(a.poly, b.poly)));
+  for(const it of vis){
+    if(worldPoly(it).some(([x,y]) => x<-EPS || y<-EPS || x>ROOM.W+EPS || y>ROOM.D+EPS)){
+      probs.push(`${it.name} goes through a wall`); bad.add(it.id);
+    }
+    if(!collides(it)) continue;
+    for(const f of FIXTURES){
+      if(!hit(parts.get(it.id), [f])) continue;
+      const msg = f.part==='swing' ? `${it.name} is in the ${f.opening.label.toLowerCase()}'s swing`
+                : f.part==='switch' ? `${it.name} blocks the light switch`
+                : `${it.name} hits the ${f.label.toLowerCase()}`;
+      if(!probs.includes(msg)) probs.push(msg);
+      bad.add(it.id);
+    }
+  }
+  for(let i=0;i<vis.length;i++) for(let j=i+1;j<vis.length;j++){
+    const A=vis[i], B=vis[j];
+    if(!collides(A) || !collides(B)) continue;
+    if(hit(parts.get(A.id), parts.get(B.id))){
+      probs.push(`${A.name} overlaps ${B.name}`); bad.add(A.id); bad.add(B.id);
+    }
+  }
+  return {probs, bad};
+}
+
+/* ===================== state + storage ===================== */
+const STORE_KEY = 'office-layout.v1';
+let store, items, selectedId = null, problems = {probs:[], bad:new Set()};
+let hist = [], hi = -1;
+
+const statusEl = document.getElementById('status');
+function setStatus(msg, isErr=false){
+  statusEl.textContent = msg;
+  statusEl.className = isErr ? 'err' : '';
+  if(isErr) console.error('[office-layout]', msg);
+}
+
+function loadStore(){
+  let raw;
+  try { raw = localStorage.getItem(STORE_KEY); }
+  catch(e){ setStatus(`Browser storage unavailable (${e.message}). Changes won't be saved; use Export.`, true); return null; }
+  if(!raw) return null;
+  try { const data = JSON.parse(raw); validateStore(data); return data; }
+  catch(e){
+    const backup = `${STORE_KEY}.corrupt-${Date.now()}`;
+    try { localStorage.setItem(backup, raw); }
+    catch(e2){ setStatus(`Saved layouts are unreadable (${e.message}) and could not be backed up (${e2.message}).`, true); return null; }
+    setStatus(`Saved layouts were unreadable (${e.message}). Old data kept under "${backup}". Starting fresh.`, true);
+    return null;
+  }
+}
+let storageOk = true;
+function saveStore(){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    storageOk = true;
+    setStatus(`Saved ${new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}`);
+  } catch(e){
+    storageOk = false;
+    setStatus(`NOT saved: ${e.message}. Use Export to keep a copy.`, true);
+  }
+}
+function persist(){ store.layouts[store.current] = clone(items); saveStore(); }
+
+function resetHistory(){ hist = [JSON.stringify(items)]; hi = 0; }
+function commit(){
+  const snap = JSON.stringify(items);
+  if(snap !== hist[hi]){
+    hist = hist.slice(0, hi+1); hist.push(snap); hi++;
+    if(hist.length > 200){ hist.shift(); hi--; }
+    persist();
+  }
+  renderAll();
+}
+function undo(){
+  if(hi <= 0){ setStatus('Nothing to undo'); return; }
+  hi--; items = JSON.parse(hist[hi]); afterHistoryMove();
+}
+function redo(){
+  if(hi >= hist.length-1){ setStatus('Nothing to redo'); return; }
+  hi++; items = JSON.parse(hist[hi]); afterHistoryMove();
+}
+function afterHistoryMove(){
+  if(selectedId && !items.find(i => i.id === selectedId)) selectedId = null;
+  persist(); renderAll();
+}
+const byId = id => items.find(i => i.id === id);
+
+/* ===================== formatting ===================== */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmtIn(v){
+  const r = Math.round(v*8)/8;
+  const ft = Math.floor(r/12), inch = +(r - ft*12).toFixed(3);
+  if(!ft) return `${inch}″`;
+  return inch ? `${ft}′ ${inch}″` : `${ft}′`;
+}
+const num = v => +(+v).toFixed(3);
+
+/* ===================== plan (SVG) ===================== */
+const svg = document.getElementById('plan');
+svg.setAttribute('viewBox', '-18 -20 216 136');
+
+function labelAnchor(it){
+  if(it.kind === 'ldesk'){
+    let lx = it.w*0.34, ly = it.d - it.wingA/2;
+    if(it.mirror) lx = it.w - lx;
+    return toWorld(it, lx - it.w/2, ly - it.d/2);
+  }
+  return [it.x, it.y];
+}
+
+// Plan orientation. North down is the view from the desk (facing south); north up is map-style.
+// It's a per-viewer preference kept in browser storage.
+const NORTH_KEY = 'office-layout.northDown';
+let northDown = true;
+try { const v = localStorage.getItem(NORTH_KEY); if(v !== null) northDown = v === 'true'; }
+catch(e){ console.warn('[office-layout] could not read plan orientation; using north down', e); }
+// Room (plan) coordinates ↔ drawing coordinates. A 180° turn is its own inverse.
+const view = (x, y) => northDown ? [ROOM.W - x, ROOM.D - y] : [x, y];
+// Upright text at a room position; dx/dy nudge on screen after the turn.
+function ptext(cls, x, y, content, { rot = 0, dx = 0, dy = 0, attrs = '' } = {}){
+  const [vx, vy] = view(x, y), X = vx + dx, Y = vy + dy;
+  return `<text class="${cls}" x="${X}" y="${Y}"${rot ? ` transform="rotate(${rot} ${X} ${Y})"` : ''} ${attrs}>${content}</text>`;
+}
+function renderPlanChrome(){
+  const btn = document.getElementById('flipPlan');
+  btn.textContent = northDown ? 'North is down ↓ (desk view) · flip' : 'North is up ↑ · flip';
+}
+document.getElementById('flipPlan').onclick = () => {
+  northDown = !northDown;
+  try { localStorage.setItem(NORTH_KEY, String(northDown)); }
+  catch(e){ console.warn('[office-layout] could not save plan orientation', e); }
+  renderPlan();
+};
+
+function renderPlan(){
+  const {W, D, wallT:T} = ROOM;
+  renderPlanChrome();
+  let s = '', t = '';   // s: shapes (turned with the plan), t: labels (kept upright)
+  s += `<rect x="${-T}" y="${-T}" width="${W+2*T}" height="${D+2*T}" fill="#4a4540"/>`;
+  s += `<rect x="0" y="0" width="${W}" height="${D}" fill="#efe3cf"/>`;
+  for(let x=12; x<W; x+=12) s += `<line class="grid" x1="${x}" y1="0" x2="${x}" y2="${D}"/>`;
+  for(let y=12; y<D; y+=12) s += `<line class="grid" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
+
+  for(const o of ROOM.openings){
+    const r = wallRectOff(o.wall, o.a, o.a+o.w, -T, 0);
+    if(o.kind === 'window'){
+      s += `<rect x="${r.x0}" y="${r.y0}" width="${r.x1-r.x0}" height="${r.y1-r.y0}" fill="#cfe6f5"/>`;
+      const [p1x,p1y] = wallPoint(o.wall, o.a, -T/2), [p2x,p2y] = wallPoint(o.wall, o.a+o.w, -T/2);
+      s += `<line x1="${p1x}" y1="${p1y}" x2="${p2x}" y2="${p2y}" stroke="#6d9ec2" stroke-width=".4"/>`;
+    } else {
+      s += `<rect x="${r.x0}" y="${r.y0}" width="${r.x1-r.x0}" height="${r.y1-r.y0}" fill="#efe3cf"/>`;
+      const sp = swingPoly(o);
+      s += `<polygon points="${sp.map(p=>p.join(',')).join(' ')}" fill="#e0564b14" stroke="none"/>`;
+      const [hx,hy] = sp[0], [ex,ey] = sp[sp.length-1];
+      s += `<line x1="${hx}" y1="${hy}" x2="${ex}" y2="${ey}" stroke="#5c554c" stroke-width=".6"/>`;
+      s += `<polyline points="${sp.slice(1).map(p=>p.join(',')).join(' ')}" fill="none" stroke="#8a8175" stroke-width=".3" stroke-dasharray="1 .8"/>`;
+    }
+    const outOff = (o.wall==='N'||o.wall==='S') ? -T-2.5 : -T-2.2;
+    const [lx,ly] = wallPoint(o.wall, o.a+o.w/2, outOff);
+    const rot = (o.wall==='W' || o.wall==='E') ? -90 : 0;
+    t += ptext('wlbl', lx, ly, `${esc(o.label.toLowerCase())} · ${fmtIn(o.w)}`, { rot, attrs:'dominant-baseline="middle"' });
+  }
+  // trim + sills (thin white strips)
+  for(const f of FIXTURES){
+    if(f.part === 'stool'){
+      s += `<polygon points="${f.poly.map(p=>p.join(',')).join(' ')}" fill="#fff" stroke="#b9b0a0" stroke-width=".15"/>`;
+    }
+  }
+  const hr = ROOM.heater;
+  s += `<rect x="${hr.x0}" y="${hr.y0}" width="${hr.x1-hr.x0}" height="${hr.y1-hr.y0}" fill="#fbfaf7" stroke="#8a8175" stroke-width=".3"/>`;
+  for(let x=hr.x0+1.5; x<hr.x1; x+=1.5) s += `<line x1="${x}" y1="${hr.y0+1}" x2="${x}" y2="${hr.y1-1}" stroke="#8a8175" stroke-width=".2"/>`;
+  // heater label sits just west of the heater, reading away from it
+  t += ptext('lbl sm', hr.x0-1, (hr.y0+hr.y1)/2, 'heater', { dy:1, attrs:`style="text-anchor:${northDown ? 'start' : 'end'}"` });
+  const sw = wallRect(ROOM.lightSwitch.wall, ROOM.lightSwitch.a0, ROOM.lightSwitch.a1, 0.8);
+  s += `<rect x="${sw.x0}" y="${sw.y0}" width="${sw.x1-sw.x0}" height="${sw.y1-sw.y0}" fill="#e0a13a"/>`;
+  t += ptext('lbl sm', sw.x0-4.5, (sw.y0+sw.y1)/2, 'switch', { dy:1 });
+
+  // furniture: rugs first so they sit underneath
+  const ordered = shownItems().sort((a,b) => (a.kind==='rug' ? -1 : 0) - (b.kind==='rug' ? -1 : 0));
+  for(const it of ordered){
+    const P = worldPoly(it);
+    const cls = ['item', it.id===selectedId && 'sel', problems.bad.has(it.id) && 'bad'].filter(Boolean).join(' ');
+    const op = it.kind==='rug' ? 0.45 : 0.82;
+    s += `<g class="${cls}" data-id="${esc(it.id)}"><polygon points="${P.map(p=>p.map(num).join(',')).join(' ')}" fill="${it.color}" fill-opacity="${op}"${it.est ? ' stroke-dasharray="2 1.2"' : ''}/></g>`;
+  }
+  for(const it of ordered){
+    const [ax,ay] = labelAnchor(it);
+    t += ptext('lbl', ax, ay, `${esc(it.name)}${it.est ? ' (est.)' : ''}`, { dy:-0.6 });
+    t += ptext('lbl sm', ax, ay, `${num(it.w)}×${num(it.d)}×${num(it.h)}″`, { dy:2.6 });
+  }
+
+  // distances from the selected piece to each wall
+  const sel = selectedId && byId(selectedId);
+  if(sel){
+    const b = bbox(worldPoly(sel)), cx=(b.x0+b.x1)/2, cy=(b.y0+b.y1)/2;
+    const dim = (x1,y1,x2,y2,v,tx,ty,o) => {
+      if(v < 0.4) return;
+      s += `<line class="dim" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+      t += ptext('dimt', tx, ty, fmtIn(v), o);
+    };
+    dim(0,cy,b.x0,cy, b.x0, b.x0/2, cy, { dy:-1 });
+    dim(b.x1,cy,W,cy, W-b.x1, (b.x1+W)/2, cy, { dy:-1 });
+    dim(cx,0,cx,b.y0, b.y0, cx, b.y0/2, { dx:0.6, dy:1 });
+    dim(cx,b.y1,cx,D, D-b.y1, cx, (b.y1+D)/2, { dx:0.6, dy:1 });
+  }
+
+  t += ptext('rlbl', W/2, D+T+8, 'south wall · 15′ (180″)', { attrs:'dominant-baseline="middle"' });
+  t += ptext('rlbl', W+T+9, D/2, 'east wall · 7′ 10″ (94″)', { rot:-90, attrs:'dominant-baseline="middle"' });
+  t += ptext('rlbl', W/2 - 45, -T-8, 'north wall', { attrs:'dominant-baseline="middle"' });
+  t += ptext('rlbl', -T-9, D/2 + 30, 'west wall', { rot:-90, attrs:'dominant-baseline="middle"' });
+  // compass: always top-right on screen, arrow pointing at north
+  t += `<g transform="translate(${W+T+9} ${-T-10})"><path d="M0 -4 L2 1 L0 0 L-2 1Z" fill="#1f1d1a" transform="rotate(${northDown ? 180 : 0})"/><text class="rlbl" y="${northDown ? 8.5 : 5}">N</text></g>`;
+  const turn = northDown ? ` transform="rotate(180 ${W/2} ${D/2})"` : '';
+  svg.innerHTML = `<g id="planShapes"${turn}>${s}</g>${t}`;
+}
+
+/* ---------- plan interaction ---------- */
+// Pointer position in room (plan) coordinates, whichever way the plan is turned.
+function svgPt(e){
+  const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+  const q = p.matrixTransform(svg.getScreenCTM().inverse());
+  const [x, y] = view(q.x, q.y);
+  return { x, y };
+}
+function bestShift(edges, targets, R){
+  let best = null;
+  for(const e of edges) for(const t of targets){
+    const d = t - e;
+    if(Math.abs(d) <= R && (best === null || Math.abs(d) < Math.abs(best))) best = d;
+  }
+  return best ?? 0;
+}
+function snapPosition(it, nx, ny, free){
+  it.x = nx; it.y = ny;
+  if(free) return;
+  it.x = Math.round(it.x*2)/2; it.y = Math.round(it.y*2)/2;
+  const b = bbox(worldPoly(it));
+  const xs = [0, ROOM.trimT, ROOM.W, ROOM.W-ROOM.trimT, ROOM.heater.x0, ROOM.heater.x1];
+  const ys = [0, ROOM.trimT, ROOM.D, ROOM.D-ROOM.trimT, ROOM.heater.y0];
+  for(const o of shownItems()){
+    if(o.id === it.id) continue;
+    const ob = bbox(worldPoly(o));
+    xs.push(ob.x0, ob.x1); ys.push(ob.y0, ob.y1);
+  }
+  it.x += bestShift([b.x0,b.x1], xs, 2);
+  it.y += bestShift([b.y0,b.y1], ys, 2);
+}
+
+let drag = null, rafPending = false;
+function scheduleLive(){
+  if(rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; problems = findProblems(); renderPlan(); rebuildFurniture3D(); });
+}
+svg.addEventListener('pointerdown', e => {
+  const g = e.target.closest('[data-id]');
+  if(!g){ select(null); return; }
+  const it = byId(g.dataset.id);
+  if(!it) return;
+  if(selectedId !== it.id) select(it.id);
+  const p = svgPt(e);
+  drag = { id:it.id, sx:p.x, sy:p.y, ox:it.x, oy:it.y, moved:false };
+  svg.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+svg.addEventListener('pointermove', e => {
+  if(!drag) return;
+  const it = byId(drag.id), p = svgPt(e);
+  snapPosition(it, drag.ox + p.x - drag.sx, drag.oy + p.y - drag.sy, e.altKey);
+  drag.moved = true;
+  scheduleLive();
+});
+const endDrag = () => { if(drag && drag.moved) commit(); drag = null; };
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+
+function select(id){ selectedId = id; renderAll(); }
+function rotateSel(deg){
+  const it = selectedId && byId(selectedId); if(!it) return;
+  it.rot = ((it.rot + deg) % 360 + 360) % 360;
+  commit();
+}
+function duplicateSel(){
+  const it = selectedId && byId(selectedId); if(!it) return;
+  const c = { ...clone(it), id:newId(), name:it.name, x:it.x+6, y:it.y+6, est:false, note:'' };
+  items.push(c); selectedId = c.id; commit();
+}
+function deleteSel(){
+  if(!selectedId) return;
+  items = items.filter(i => i.id !== selectedId); selectedId = null; commit();
+}
+
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  const mod = e.metaKey || e.ctrlKey;
+  if(mod && e.key.toLowerCase() === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if(mod && e.key.toLowerCase() === 'd'){ e.preventDefault(); duplicateSel(); return; }
+  const it = selectedId && byId(selectedId);
+  if(!it) return;
+  if(e.key === 'r' || e.key === 'R'){ rotateSel(e.shiftKey ? 15 : 90); return; }
+  if(e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); deleteSel(); return; }
+  const step = e.shiftKey ? 6 : 0.5;
+  const mv = {ArrowLeft:[-step,0], ArrowRight:[step,0], ArrowUp:[0,-step], ArrowDown:[0,step]}[e.key];
+  // arrows move the way they point on screen, so they reverse in room terms when north is down
+  if(mv){ e.preventDefault(); const s = northDown ? -1 : 1; it.x += s*mv[0]; it.y += s*mv[1]; commit(); }
+  if(e.key === 'Escape') select(null);
+});
+
+/* ===================== sidebar ===================== */
+function renderPalette(){
+  const host = document.getElementById('palette');
+  host.innerHTML = PRESETS.map((p,i) => `<button data-p="${i}">${esc(p.label)}</button>`).join('');
+  host.onclick = e => {
+    const b = e.target.closest('[data-p]'); if(!b) return;
+    const p = PRESETS[+b.dataset.p];
+    const it = { ...clone(p), id:newId(), x:ROOM.W/2, y:ROOM.D/2, rot:0, z:0, est:false, note:'' };
+    delete it.label;
+    items.push(it); selectedId = it.id; commit();
+  };
+}
+
+function renderList(){
+  const host = document.getElementById('itemList');
+  host.innerHTML = items.map(it => `
+    <div data-id="${esc(it.id)}" class="${[it.id===selectedId && 'sel', it.hidden && 'off'].filter(Boolean).join(' ')}">
+      <input type="checkbox" data-toggle="${esc(it.id)}" title="Show or hide"${it.hidden ? '' : ' checked'}>
+      <span class="sw" style="background:${it.color}"></span>
+      <span>${esc(it.name)}</span>${it.est ? '<span class="est">est.</span>' : ''}
+      <span class="right">${it.owned ? '<span class="price">owned</span>' : Number.isFinite(it.price) ? `<span class="price">${money(it.price)}</span>` : ''}${problems.bad.has(it.id) ? '<span class="bad">!</span>' : ''}</span>
+    </div>`).join('') || '<div class="note">Empty room.</div>';
+  host.onclick = e => {
+    const t = e.target.closest('[data-toggle]');
+    if(t){
+      const it = byId(t.dataset.toggle); if(!it) return;
+      it.hidden = !t.checked;
+      if(it.hidden && selectedId === it.id) selectedId = null;
+      commit();
+      return;
+    }
+    const d = e.target.closest('[data-id]'); if(d) select(d.dataset.id);
+  };
+}
+
+function field(k, label, v, opts={}){
+  const cls = opts.full ? ' class="full"' : '';
+  if(opts.type === 'text') return `<label${cls}>${label}<input type="text" data-k="${k}" value="${esc(v)}"></label>`;
+  if(opts.type === 'color') return `<label${cls}>${label}<input type="color" data-k="${k}" value="${esc(v)}"></label>`;
+  if(opts.type === 'check') return `<label class="row full"><input type="checkbox" data-k="${k}"${v ? ' checked' : ''}> ${label}</label>`;
+  return `<label${cls}>${label}<input type="number" step="${opts.step ?? 0.25}" data-k="${k}" value="${num(v)}"></label>`;
+}
+
+function renderForm(){
+  const host = document.getElementById('formHost');
+  const it = selectedId && byId(selectedId);
+  if(!it){ host.innerHTML = '<div class="note">Click a piece in the plan to edit it.</div>'; return; }
+  const b = bbox(worldPoly(it));
+  const isL = it.kind === 'ldesk';
+  let f = field('name','Name',it.name,{type:'text',full:true});
+  f += field('w', isL ? 'Long side' : 'Width', it.w);
+  f += field('d', isL ? 'Short side' : 'Depth', it.d);
+  f += field('h', 'Height', it.h);
+  f += field('z', 'Off the floor', it.z);
+  if(isL){
+    f += field('wingA','Long wing depth',it.wingA);
+    f += field('wingB','Short wing depth',it.wingB);
+    f += field('curve','Cutout curve',it.curve);
+  }
+  if(isL || it.kind === 'desk') f += field('top','Top thickness',it.top,{step:0.125});
+  if(it.kind === 'glasscab') f += field('legH','Leg height',it.legH,{step:0.1});
+  if(it.kind === 'lowcase' || it.kind === 'curio') f += field('baseH','Base height',it.baseH,{step:0.1});
+  if(it.kind === 'lowcase') f += field('topT','Top thickness',it.topT,{step:0.1});
+  if(it.kind === 'curio') f += field('split','Divider height',it.split,{step:0.25});
+  if(it.kind === 'cart' || it.kind === 'cambrie') f += field('casterH','Caster height',it.casterH,{step:0.25});
+  if(it.kind === 'cart') f += field('drawers','Drawers',it.drawers ?? 5,{step:1});
+  if(it.kind === 'farmfile') f += field('legH','Leg height',it.legH,{step:0.25});
+  if(it.kind === 'bookcab'){
+    f += field('upperD','Shelf depth',it.upperD);
+    f += field('legH','Leg height',it.legH,{step:0.1});
+    f += field('cabH','Cabinet height',it.cabH,{step:0.1});
+    f += field('r','Front corner radius',it.r);
+  }
+  if(it.kind === 'filehutch'){
+    f += field('baseH','File base height',it.baseH,{step:0.1});
+    f += field('hutchD','Hutch depth',it.hutchD,{step:0.1});
+  }
+  f += field('fromW','From west wall',b.x0);
+  f += field('fromN','From north wall',b.y0);
+  f += field('rot','Rotation °',it.rot,{step:15});
+  f += field('color','Color',it.color,{type:'color'});
+  if(isL) f += field('mirror','Mirror (short wing on the other side)',it.mirror,{type:'check'});
+  f += field('est','Size or position is an estimate',it.est,{type:'check'});
+  f += field('owned','I already own this (leave it out of the budget)',it.owned,{type:'check'});
+  f += `<label>Price ($)<input type="number" step="0.01" min="0" data-k="price" value="${it.price ?? ''}" placeholder="none"></label>`;
+  f += `<label class="full">Product link<input type="text" data-k="url" value="${esc(it.url ?? '')}" placeholder="https://…"></label>`;
+  if(it.url || it.priceNote){
+    f += `<div class="full prodlink">${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">Open product page ↗</a>` : ''}${it.priceNote ? ` <span>${esc(it.priceNote)}</span>` : ''}</div>`;
+  }
+  host.innerHTML = `
+    <div class="form">${f}</div>
+    <div id="formErr"></div>
+    <div class="btnrow">
+      <button id="bRot">Rotate 90°</button>
+      <button id="bDup">Duplicate</button>
+      <button id="bDel" class="danger">Remove</button>
+    </div>
+    <div class="note">${KINDS[it.kind]}. ${bboxNote(it, b)}${it.note ? '<br>' + esc(it.note) : ''}</div>`;
+  host.querySelector('#bRot').onclick = () => rotateSel(90);
+  host.querySelector('#bDup').onclick = duplicateSel;
+  host.querySelector('#bDel').onclick = deleteSel;
+  host.querySelectorAll('[data-k]').forEach(inp => inp.addEventListener('change', () => applyField(it.id, inp)));
+}
+function bboxNote(it, b){
+  const bands = collisionParts(it).map(p => `${p.what ? p.what + ' ' : ''}${num(p.z0)}–${num(p.z1)}″`).join(', ');
+  const band = collides(it) ? ` Collision checks use ${bands} of height${it.kind.includes('desk') ? ' (the top only, so things fit underneath)' : ''}.` : ' Rugs are not collision-checked.';
+  return `Footprint ${fmtIn(b.x1-b.x0)} × ${fmtIn(b.y1-b.y0)}.${band}`;
+}
+function applyField(id, inp){
+  const it = byId(id); if(!it) return;
+  const k = inp.dataset.k;
+  const cand = clone(it);
+  if(k === 'price'){
+    const s = inp.value.trim();
+    if(s === ''){ delete cand.price; delete cand.priceNote; }
+    else {
+      const v = Number(s);
+      if(!Number.isFinite(v) || v < 0){ showFormErr('Price must be a number, 0 or more (leave it empty for no price)'); return; }
+      cand.price = Math.round(v*100)/100;
+      if(cand.price !== it.price) cand.priceNote = 'Entered by hand.';
+    }
+  } else if(k === 'url'){
+    const s = inp.value.trim();
+    if(s && !/^https?:\/\//i.test(s)){ showFormErr('Product link must start with http:// or https://'); return; }
+    if(s) cand.url = s; else delete cand.url;
+  } else if(inp.type === 'checkbox') cand[k] = inp.checked;
+  else if(inp.type === 'number'){
+    const v = parseFloat(inp.value);
+    if(!Number.isFinite(v)){ showFormErr(`"${inp.value}" is not a number`); return; }
+    if(k === 'fromW' || k === 'fromN'){
+      const b = bbox(worldPoly(cand));
+      if(k === 'fromW') cand.x += v - b.x0; else cand.y += v - b.y0;
+    } else if(k === 'rot') cand.rot = ((v % 360) + 360) % 360;
+    else cand[k] = v;
+  } else cand[k] = inp.value;
+  if(k === 'name' && !cand.name.trim()){ showFormErr('Name cannot be empty'); return; }
+  const err = validateDims(cand);
+  if(err){ showFormErr(err); return; }
+  for(const key of Object.keys(it)) if(!(key in cand)) delete it[key];   // cleared fields (price, link) go away
+  Object.assign(it, cand);
+  commit();
+}
+function showFormErr(msg){ const el = document.getElementById('formErr'); if(el) el.textContent = msg; }
+
+const money = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+// Total of the pieces currently shown that you'd have to buy. Owned pieces never count;
+// shown pieces without a price are listed so the total is never quietly incomplete.
+function renderBudget(){
+  const host = document.getElementById('budget');
+  const toBuy = shownItems().filter(i => !i.owned);
+  const priced = toBuy.filter(i => Number.isFinite(i.price));
+  const unpriced = toBuy.filter(i => !Number.isFinite(i.price));
+  const cents = priced.reduce((s, i) => s + Math.round(i.price*100), 0);
+  let h = `<div class="total">${money(cents/100)} <span>for ${priced.length} shown piece${priced.length===1?'':'s'} to buy${unpriced.length ? ', not counting the unpriced ones below' : ''}</span></div>`;
+  for(const i of priced){
+    const name = i.url ? `<a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.name)} ↗</a>` : esc(i.name);
+    h += `<div class="row"><span>${name}</span><b>${money(i.price)}</b></div>`;
+  }
+  if(unpriced.length) h += `<div class="missing">No price yet: ${unpriced.map(i => esc(i.name)).join(', ')}. Add a price in Selected, or tick "I already own this".</div>`;
+  if(!toBuy.length) h += `<div class="note">Nothing to buy is shown. Tick pieces in "In the room" to price a layout.</div>`;
+  host.innerHTML = h;
+}
+function renderProblems(){
+  const host = document.getElementById('problems');
+  host.innerHTML = problems.probs.length
+    ? problems.probs.map(p => `<div>${esc(p)}</div>`).join('')
+    : '<div class="none">Everything fits.</div>';
+}
+
+/* ===================== layouts UI ===================== */
+const layoutSel = document.getElementById('layoutSel');
+function renderLayouts(){
+  layoutSel.innerHTML = Object.keys(store.layouts).map(n => `<option${n===store.current ? ' selected' : ''}>${esc(n)}</option>`).join('');
+  document.getElementById('delLayout').disabled = Object.keys(store.layouts).length < 2;
+}
+layoutSel.onchange = () => {
+  store.current = layoutSel.value;
+  items = clone(store.layouts[store.current]);
+  selectedId = null; resetHistory(); saveStore(); renderAll();
+};
+document.getElementById('saveAs').onclick = () => {
+  const inp = document.getElementById('newName');
+  const name = inp.value.trim();
+  if(!name){ setStatus('Type a name for the new layout first', true); inp.focus(); return; }
+  if(store.layouts[name]){ setStatus(`A layout called "${name}" already exists`, true); return; }
+  store.layouts[name] = clone(items); store.current = name; inp.value = '';
+  resetHistory(); saveStore(); renderAll();
+};
+const delBtn = document.getElementById('delLayout');
+let delTimer = null;
+delBtn.onclick = () => {
+  if(!delBtn.classList.contains('armed')){
+    delBtn.classList.add('armed'); delBtn.textContent = `Delete "${store.current}"?`;
+    clearTimeout(delTimer);
+    delTimer = setTimeout(() => { delBtn.classList.remove('armed'); delBtn.textContent = 'Delete layout'; }, 3000);
+    return;
+  }
+  clearTimeout(delTimer); delBtn.classList.remove('armed'); delBtn.textContent = 'Delete layout';
+  const gone = store.current;
+  delete store.layouts[gone];
+  store.current = Object.keys(store.layouts)[0];
+  items = clone(store.layouts[store.current]); selectedId = null; resetHistory(); saveStore(); renderAll();
+  setStatus(`Deleted "${gone}"`);
+};
+document.getElementById('undo').onclick = undo;
+document.getElementById('redo').onclick = redo;
+document.getElementById('reset').onclick = () => { items = defaultItems(); selectedId = null; commit(); setStatus('Reset to today\'s room (undo brings your layout back)'); };
+document.getElementById('export').onclick = () => {
+  const blob = new Blob([JSON.stringify(store, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'office-layouts.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  setStatus('Exported office-layouts.json');
+};
+const importFile = document.getElementById('importFile');
+document.getElementById('importBtn').onclick = () => importFile.click();
+importFile.onchange = async () => {
+  const file = importFile.files[0]; importFile.value = '';
+  if(!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    validateStore(data);
+    const added = [];
+    for(const [n, its] of Object.entries(data.layouts)){
+      let name = n;
+      while(store.layouts[name]) name += ' (imported)';
+      store.layouts[name] = its; added.push(name);
+    }
+    store.current = added[0]; items = clone(store.layouts[store.current]);
+    selectedId = null; resetHistory(); saveStore(); renderAll();
+    setStatus(`Imported ${added.length} layout${added.length>1 ? 's' : ''}`);
+  } catch(e){ setStatus(`Import failed: ${e.message}`, true); }
+};
+
+/* ===================== 3D ===================== */
+const threeEl = document.getElementById('three');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+threeEl.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#e9e5dc');
+const camera = new THREE.PerspectiveCamera(50, 1, 1, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.HemisphereLight('#ffffff', '#a89478', 1.6));
+const sun = new THREE.DirectionalLight('#fff3dd', 2.2);
+sun.position.set(ROOM.W*0.4, 260, ROOM.D+240);
+sun.target.position.set(ROOM.W/2, 0, ROOM.D/2);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-160, right:160, top:160, bottom:-160, near:10, far:900 });
+sun.shadow.bias = -0.0005;
+scene.add(sun, sun.target);
+
+const M = {
+  wall:  new THREE.MeshStandardMaterial({ color:'#efe8da', roughness:.95 }),
+  trim:  new THREE.MeshStandardMaterial({ color:'#fbfaf6', roughness:.6 }),
+  floor: new THREE.MeshStandardMaterial({ color:'#b98a57', roughness:.7 }),
+  glass: new THREE.MeshStandardMaterial({ color:'#bfe0f5', transparent:true, opacity:.3, roughness:.1 }),
+  door:  new THREE.MeshStandardMaterial({ color:'#f4f2ec', roughness:.6 }),
+  metal: new THREE.MeshStandardMaterial({ color:'#8c9096', roughness:.4, metalness:.5 }),
+  dark:  new THREE.MeshStandardMaterial({ color:'#2c2a28', roughness:.8 }),
+  wood:  new THREE.MeshStandardMaterial({ color:'#6b4a33', roughness:.8 }),
+  swing: new THREE.MeshBasicMaterial({ color:'#e0564b', transparent:true, opacity:.12, side:THREE.DoubleSide, depthWrite:false }),
+  switchPlate: new THREE.MeshStandardMaterial({ color:'#e0a13a', roughness:.5 }),
+};
+// Box from a plan rect + height band.
+function pbox(r, z0, z1, mat, shadows=true){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(r.x1-r.x0, z1-z0, r.y1-r.y0), mat);
+  m.position.set((r.x0+r.x1)/2, (z0+z1)/2, (r.y0+r.y1)/2);
+  m.castShadow = m.receiveShadow = shadows;
+  return m;
+}
+
+const wallGroups = {};
+function buildRoom3D(){
+  const {W, D, H, wallT:T, trimW:tw, baseH, baseT} = ROOM;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D), M.floor);
+  floor.rotation.x = -Math.PI/2; floor.position.set(W/2, 0, D/2); floor.receiveShadow = true;
+  scene.add(floor);
+
+  for(const wall of ['N','S','W','E']){
+    const g = new THREE.Group(); wallGroups[wall] = g; scene.add(g);
+    const len = WALLS[wall].len;
+    const ext = (wall==='N' || wall==='S') ? T : 0;   // N/S walls wrap the corners
+    const ops = ROOM.openings.filter(o => o.wall === wall);
+    const cuts = [...new Set([-ext, len+ext, ...ops.flatMap(o => [o.a, o.a+o.w])])].sort((a,b) => a-b);
+    for(let i=0; i<cuts.length-1; i++){
+      const s0 = cuts[i], s1 = cuts[i+1];
+      const hole = ops.find(o => o.a <= s0 && o.a+o.w >= s1);
+      const bands = hole ? [[0, hole.z], [hole.z+hole.h, H]] : [[0, H]];
+      for(const [z0,z1] of bands) if(z1-z0 > EPS) g.add(pbox(wallRectOff(wall, s0, s1, -T, 0), z0, z1, M.wall));
+    }
+    for(const o of ops){
+      if(o.kind === 'window'){
+        g.add(pbox(wallRectOff(wall, o.a, o.a+o.w, -T/2-0.2, -T/2+0.2), o.z, o.z+o.h, M.glass, false));
+        g.add(pbox(wallRectOff(wall, o.a, o.a+o.w, -T/2-0.9, -T/2+0.9), o.z+o.h/2-0.75, o.z+o.h/2+0.75, M.trim));
+        for(const [lo,hi] of [[o.a, o.a+1.5], [o.a+o.w-1.5, o.a+o.w]])
+          g.add(pbox(wallRectOff(wall, lo, hi, -T/2-0.9, -T/2+0.9), o.z, o.z+o.h, M.trim));
+      } else {
+        g.add(pbox(wallRectOff(wall, o.a, o.a+o.w, -1.75, -0.25), 0, o.h, M.door));
+        const ka = o.hinge === 'start' ? o.a+o.w-2.75 : o.a+2.75;
+        const [kx,ky] = wallPoint(wall, ka, 1.2);
+        const knob = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 12), M.metal);
+        knob.position.set(kx, 36, ky); g.add(knob);
+      }
+    }
+    // baseboards, broken at door casings
+    let segs = [[0, len]];
+    for(const o of ops.filter(o => o.kind === 'door')){
+      const lo = o.a-tw, hi = o.a+o.w+tw;
+      segs = segs.flatMap(([a,b]) => [[a, Math.min(b,lo)], [Math.max(a,hi), b]]).filter(([a,b]) => b-a > EPS);
+    }
+    for(const [a,b] of segs) g.add(pbox(wallRect(wall, a, b, baseT), 0, baseH, M.trim));
+  }
+  for(const f of FIXTURES){
+    if(f.part === 'trim' || f.part === 'stool') wallGroups[f.wall].add(pbox(bbox(f.poly), f.z0, f.z1, M.trim));
+    if(f.part === 'swing'){
+      const shape = new THREE.Shape(f.poly.map(([x,y]) => new THREE.Vector2(x, y)));
+      const geo = new THREE.ShapeGeometry(shape); geo.rotateX(Math.PI/2);
+      const m = new THREE.Mesh(geo, M.swing); m.position.y = 0.15; scene.add(m);
+    }
+  }
+  const hr = ROOM.heater;
+  scene.add(pbox(hr, hr.z0, hr.z1, M.trim));
+  scene.add(pbox({x0:hr.x0+1, x1:hr.x1-1, y0:hr.y0+1, y1:hr.y1-1}, hr.z1, hr.z1+0.1, M.dark));
+  const sw = ROOM.lightSwitch;
+  wallGroups[sw.wall].add(pbox(wallRect(sw.wall, sw.a0, sw.a1, 0.3), sw.z0, sw.z1, M.switchPlate));
+}
+
+// Furniture, built in local coordinates (centered, plan y → three z), then rotated into place.
+const furnitureGroup = new THREE.Group(); scene.add(furnitureGroup);
+function lbox(x0,x1,y0,y1,z0,z1,mat){ return pbox({x0,x1,y0,y1}, z0, z1, mat); }
+function buildItem3D(it){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color:it.color, roughness:.75 });
+  const w2 = it.w/2, d2 = it.d/2, h = it.h;
+  switch(it.kind){
+    case 'ldesk': {
+      const shape = new THREE.Shape(localPoly(it).map(([x,y]) => new THREE.Vector2(x, y)));
+      const geo = new THREE.ExtrudeGeometry(shape, { depth:it.top, bevelEnabled:false });
+      geo.rotateX(Math.PI/2);
+      const top = new THREE.Mesh(geo, mat); top.position.y = h; top.castShadow = top.receiveShadow = true;
+      g.add(top);
+      const mx = x => (it.mirror ? it.w - x : x) - w2, my = y => y - d2;
+      const legA = [3, it.d - it.wingA/2], legB = [it.w - it.wingB/2, 3];
+      const under = h - it.top;
+      for(const [lx,ly] of [legA, legB]) g.add(lbox(mx(lx)-1.25, mx(lx)+1.25, my(ly)-1.25, my(ly)+1.25, 1.2, under, M.metal));
+      g.add(lbox(mx(3)-1, mx(3)+1, my(it.d-it.wingA+2), my(it.d-2), 0, 1.2, M.metal));
+      const [bx0,bx1] = [mx(it.w-it.wingB+2), mx(it.w-2)].sort((a,b)=>a-b);
+      g.add(lbox(bx0, bx1, my(3)-1, my(3)+1, 0, 1.2, M.metal));
+      const [cx0,cx1] = [mx(3), mx(it.w-it.wingB/2)].sort((a,b)=>a-b);
+      g.add(lbox(cx0, cx1, my(it.d-it.wingA/2)-1, my(it.d-it.wingA/2)+1, under-2, under, M.metal));
+      g.add(lbox(mx(it.w-it.wingB/2)-1, mx(it.w-it.wingB/2)+1, my(3), my(it.d-it.wingA/2), under-2, under, M.metal));
+      break;
+    }
+    case 'desk': {
+      g.add(lbox(-w2, w2, -d2, d2, h-it.top, h, mat));
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-2.25), y = sy*(d2-2.25);
+        g.add(lbox(x-0.75, x+0.75, y-0.75, y+0.75, 0, h-it.top, M.metal));
+      }
+      break;
+    }
+    case 'shelf': {
+      g.add(lbox(-w2, -w2+1, -d2, d2, 0, h, mat));
+      g.add(lbox(w2-1, w2, -d2, d2, 0, h, mat));
+      const n = Math.max(3, Math.round(h/14));
+      for(let i=0; i<n; i++){ const z = 1 + i*(h-2)/(n-1); g.add(lbox(-w2+1, w2-1, -d2, d2, z-0.4, z+0.35, mat)); }
+      break;
+    }
+    case 'glasscab': {
+      // Black steel frame on legs, glass on all sides, four glass doors, one glass shelf.
+      const glass = new THREE.MeshStandardMaterial({ color:'#6b5a4a', transparent:true, opacity:.35, roughness:.1 });
+      const gbox = (...a) => { const m = lbox(...a, glass); m.castShadow = false; return m; };
+      const p = 1, L = it.legH, topZ = h - 1;
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-p/2), y = sy*(d2-p/2);
+        g.add(lbox(x-p/2, x+p/2, y-p/2, y+p/2, 0, topZ, mat));             // corner posts run floor to top
+      }
+      for(const sy of [-1,1]) g.add(lbox(-p/2, p/2, sy*(d2-p/2)-p/2, sy*(d2-p/2)+p/2, 0, L, mat)); // middle legs
+      g.add(lbox(-w2, w2, -d2, d2, topZ, h, mat));                          // top
+      g.add(lbox(-w2+p, w2-p, -d2+p, d2-p, L, L+0.75, mat));                // bottom panel
+      for(const sy of [-1,1]) g.add(lbox(-w2+p, w2-p, sy*(d2-p/2)-p/2, sy*(d2-p/2)+p/2, L, L+1.5, mat)); // bottom rails
+      g.add(lbox(-w2+p, w2-p, d2-p, d2, topZ-1.5, topZ, mat));              // top front rail
+      g.add(gbox(-w2+p, w2-p, d2-0.6, d2-0.3, L+1.5, topZ-1.5));            // front glass
+      g.add(gbox(-w2+p, w2-p, -d2+0.3, -d2+0.6, L+1.5, topZ));              // back glass
+      for(const sx of [-1,1]) g.add(gbox(sx*(w2-0.6)-0.15, sx*(w2-0.6)+0.15, -d2+p, d2-p, L+1.5, topZ)); // side glass
+      for(const k of [-1, 0, 1]){                                            // door frames
+        const x = k*it.w/4, half = k === 0 ? 0.6 : 0.4;
+        g.add(lbox(x-half, x+half, d2-0.9, d2, L+1.5, topZ-1.5, mat));
+      }
+      for(const cx of [-it.w/4, it.w/4]) for(const s of [-1,1])              // handles
+        g.add(lbox(cx+s*1.2-0.25, cx+s*1.2+0.25, d2, d2+0.8, h*0.62, h*0.62+4, mat));
+      g.add(gbox(-w2+p, w2-p, -d2+p, d2-p, L+0.75+12, L+0.75+12.35));       // glass shelf, 12″ up
+      break;
+    }
+    case 'lowcase': {
+      // Recessed black plinth, black deck and top, glass front/back/left, black right end, one glass shelf.
+      const glass = new THREE.MeshStandardMaterial({ color:'#9fb4bd', transparent:true, opacity:.28, roughness:.05 });
+      const gbox = (...a) => { const m = lbox(...a, glass); m.castShadow = false; return m; };
+      const B = it.baseH, T = h - it.topT;
+      g.add(lbox(-w2+1, w2-1, -d2+1, d2-1, 0, B, mat));                     // plinth
+      g.add(lbox(-w2, w2, -d2, d2, B, B+0.5, mat));                          // deck
+      g.add(lbox(-w2, w2, -d2, d2, T, h, mat));                              // top
+      g.add(lbox(w2-1.5, w2, -d2, d2, B+0.5, T, mat));                       // right end panel
+      g.add(gbox(-w2, w2-1.5, d2-0.5, d2-0.2, B+0.5, T));                    // front glass
+      g.add(gbox(-w2, w2-1.5, -d2+0.2, -d2+0.5, B+0.5, T));                  // back glass
+      g.add(gbox(-w2, -w2+0.3, -d2+0.5, d2-0.5, B+0.5, T));                  // left glass
+      g.add(gbox(-w2+0.3, w2-1.5, -d2+0.5, d2-0.5, (B+T)/2, (B+T)/2+0.3));   // shelf
+      for(const k of [-1, 0, 1]){                                            // sliding door edges
+        const x = k*it.w/4;
+        g.add(lbox(x-0.2, x+0.2, d2-0.7, d2-0.1, B+0.5, T, M.metal));
+      }
+      break;
+    }
+    case 'curio': {
+      // Tall case: plinth, corner posts, crown, divider, glass all round, 3 glass shelves.
+      const glass = new THREE.MeshStandardMaterial({ color:'#6f7f86', transparent:true, opacity:.3, roughness:.05 });
+      const gbox = (...a) => { const m = lbox(...a, glass); m.castShadow = false; return m; };
+      const B = it.baseH, S = it.split, crown = h - 1.5;
+      const bw = w2 - 0.6, bd = d2 - 0.6, p = 1.2;                           // body is inset under the crown
+      g.add(lbox(-bw, bw, -bd, bd, 0, B, mat));                              // plinth
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(bw-p/2), y = sy*(bd-p/2);
+        g.add(lbox(x-p/2, x+p/2, y-p/2, y+p/2, B, crown, mat));
+      }
+      g.add(lbox(-w2, w2, -d2, d2, crown, h, mat));                          // crown
+      g.add(lbox(-bw, bw, -bd, bd, S-0.75, S+0.75, mat));                    // divider
+      g.add(lbox(-bw, bw, -bd, bd, B, B+0.5, mat));                          // bottom deck
+      g.add(gbox(-bw+p, bw-p, bd-0.4, bd-0.1, B+0.5, crown));                // front glass
+      g.add(lbox(-bw+p, bw-p, -bd, -bd+0.4, B+0.5, crown, mat));             // back panel
+      for(const sx of [-1,1]) g.add(gbox(sx*(bw-0.25)-0.15, sx*(bw-0.25)+0.15, -bd+p, bd-p, B+0.5, crown)); // sides
+      const shelf = z => g.add(gbox(-bw+p, bw-p, -bd+0.4, bd-0.4, z, z+0.3));
+      shelf((B+S)/2); shelf(S + (crown-S)/3); shelf(S + 2*(crown-S)/3);
+      break;
+    }
+    case 'cart': {
+      // Stack of drawers with finger pulls, on casters (none when caster height is 0).
+      const C = it.casterH, n = it.drawers ?? 5, top = h - 1, bot = C + 0.75, dh = (top - bot)/n;
+      g.add(lbox(-w2, w2, -d2, d2-0.6, C, h, mat));                          // carcass
+      for(let i=0; i<n; i++){
+        const z0 = bot + i*dh + 0.12, z1 = bot + (i+1)*dh - 0.12;
+        g.add(lbox(-w2+0.75, w2-0.75, d2-0.6, d2, z0, z1, mat));             // drawer front
+        g.add(lbox(-2.5, 2.5, d2-0.05, d2+0.02, z1-1.4, z1-0.2, M.dark));    // finger pull
+      }
+      if(C > 0) for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-2), y = sy*(d2-2);
+        g.add(lbox(x-0.8, x+0.8, y-0.8, y+0.8, 0, C, M.dark));               // caster
+      }
+      break;
+    }
+    case 'cambrie': {
+      // Black carcass with rustic top and fronts on casters: 2 drawers + a file drawer on the left,
+      // open cubbies with a shelf on the right.
+      const C = it.casterH, fy = d2 - 0.6;
+      const xs = -w2 + 0.75, xm = -w2 + it.w*0.54, xe = w2 - 0.75;
+      const zb = C + 0.75, zt = h - 1.2;
+      g.add(lbox(-w2, w2, -d2, fy, C, zt, M.dark));                          // carcass
+      g.add(lbox(-w2, w2, -d2, d2, zt, h, mat));                             // top
+      const cuts = [zt, zt - (zt-zb)*0.25, zt - (zt-zb)*0.5, zb];            // two drawers, then the file drawer
+      for(let i=0; i<3; i++){
+        const z1 = cuts[i] - 0.15, z0 = cuts[i+1] + 0.15;
+        g.add(lbox(xs, xm, fy, d2, z0, z1, mat));                            // drawer front
+        g.add(lbox((xs+xm)/2 - 3, (xs+xm)/2 + 3, d2, d2+0.6, z1-2.2, z1-1.6, M.dark)); // handle
+      }
+      g.add(lbox(xm, xm+0.75, -d2, fy, zb, zt, M.dark));                     // divider
+      g.add(lbox(xm+0.75, xe, -d2+0.5, fy, zb, zb+0.6, mat));                // cubby floor
+      g.add(lbox(xm+0.75, xe, -d2+0.5, fy, (zb+zt)/2-0.35, (zb+zt)/2+0.35, mat)); // shelf
+      g.add(lbox(xm+0.75, xe, fy-0.02, fy, zb+0.6, zt, M.dark));              // open front (dark interior)
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-2), y = sy*(d2-2);
+        g.add(lbox(x-1, x+1, y-1, y+1, 0, C, M.dark));                       // caster
+      }
+      break;
+    }
+    case 'shaker': {
+      // Solid-wood bookcase: overhanging crown, base apron, back panel, six shelves.
+      const sideIn = 0.6, crownT = 1.25, apron = 3.5;
+      g.add(lbox(-w2, w2, -d2, d2, h-crownT, h, mat));                       // crown
+      g.add(lbox(-w2+sideIn, -w2+sideIn+0.9, -d2, d2-0.5, 0, h-crownT, mat)); // sides
+      g.add(lbox(w2-sideIn-0.9, w2-sideIn, -d2, d2-0.5, 0, h-crownT, mat));
+      g.add(lbox(-w2+sideIn+0.9, w2-sideIn-0.9, d2-1.2, d2-0.5, 0, apron, mat)); // base apron
+      g.add(lbox(-w2+sideIn+0.9, w2-sideIn-0.9, -d2, -d2+0.4, apron, h-crownT, mat)); // back
+      const bottom = apron, topShelf = h - crownT - 11;
+      for(let i=0; i<6; i++){
+        const z = bottom + i*(topShelf - bottom)/5;
+        g.add(lbox(-w2+sideIn+0.9, w2-sideIn-0.9, -d2+0.4, d2-0.5, z, z+0.75, mat));
+      }
+      break;
+    }
+    case 'etagere': {
+      // Black metal frame with a big arc on the front and back, staggered wood shelves.
+      const p = 0.9, frame = M.dark;
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-p/2), y = sy*(d2-p/2);
+        g.add(lbox(x-p/2, x+p/2, y-p/2, y+p/2, 0, h-0.8, frame));            // corner posts
+      }
+      g.add(lbox(-w2, w2, -d2, d2, h-0.8, h, mat));                          // top
+      // [left, right] as fractions of the width, then height fraction: matches the listing photo
+      const shelves = [[0,1,0.02],[0,0.72,0.2],[0.45,1,0.38],[0,0.45,0.43],[0,0.45,0.6],[0.45,1,0.6],[0,0.72,0.8]];
+      const X = f => -w2 + p + f*(it.w - 2*p);
+      for(const [a, b, f] of shelves) g.add(lbox(X(a), X(b), -d2+p, d2-p, f*h, f*h+0.7, mat));
+      for(const [xf, f0, f1] of [[0.72,0.2,0.38],[0.45,0.38,0.6],[0.72,0.6,0.8]])  // short uprights between shelves
+        for(const sy of [-1,1]) g.add(lbox(X(xf)-0.4, X(xf)+0.4, sy*(d2-p/2)-0.4, sy*(d2-p/2)+0.4, f0*h, f1*h, frame));
+      const R = it.w - 1.5, cz = h/2, N = 20;                                // arc centered on the right edge
+      const pt = t => [w2 + R*Math.cos(t), cz + R*Math.sin(t)];
+      for(const sy of [-1,1]) for(let i=0; i<N; i++){
+        const t0 = Math.PI/2 + i/N*Math.PI, t1 = Math.PI/2 + (i+1)/N*Math.PI;
+        let [x0,z0] = pt(t0), [x1,z1] = pt(t1);
+        z0 = Math.min(Math.max(z0, 0), h-0.8); z1 = Math.min(Math.max(z1, 0), h-0.8);
+        const seg = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(x1-x0, z1-z0) + 0.3, 0.8, 0.8), frame);
+        seg.rotation.z = Math.atan2(z1-z0, x1-x0);
+        seg.position.set((x0+x1)/2, (z0+z1)/2, sy*(d2-p/2));
+        g.add(seg);
+      }
+      break;
+    }
+    case 'arch': {
+      // Arched top, two open shelves under it, two-door cabinet (one rattan panel) on short feet.
+      const rattan = new THREE.MeshStandardMaterial({ color:'#d9c7a0', roughness:.9 });
+      const gold = new THREE.MeshStandardMaterial({ color:'#c9a45c', metalness:.6, roughness:.35 });
+      const feet = 3, side = 0.9, bodyTop = h - w2;
+      g.add(lbox(-w2, -w2+side, -d2, d2, 0, bodyTop, mat));                  // sides (run to the floor as feet)
+      g.add(lbox(w2-side, w2, -d2, d2, 0, bodyTop, mat));
+      g.add(lbox(-w2+side, w2-side, -d2, -d2+0.4, feet, bodyTop, mat));      // back
+      g.add(lbox(-w2+side, w2-side, d2-1.5, d2-0.8, feet-1.2, feet, mat));   // bottom rail
+      const shell = new THREE.Shape();
+      shell.absarc(0, 0, w2, 0, Math.PI, false);
+      shell.absarc(0, 0, w2-side, Math.PI, 0, true);
+      const archGeo = new THREE.ExtrudeGeometry(shell, { depth:it.d, bevelEnabled:false });
+      const archMesh = new THREE.Mesh(archGeo, mat);
+      archMesh.position.set(0, bodyTop, -d2); archMesh.castShadow = archMesh.receiveShadow = true;
+      g.add(archMesh);                                                        // arched top
+      const backDisc = new THREE.Mesh(new THREE.CircleGeometry(w2-side, 24, 0, Math.PI), mat);
+      backDisc.position.set(0, bodyTop, -d2+0.45); g.add(backDisc);           // arch back
+      const cabTop = bodyTop - 2*12.4 - 1.6;
+      for(const z of [feet, cabTop, cabTop + 12.4 + 0.8, bodyTop - 0.8])     // floor, cabinet top, shelf, arch floor
+        g.add(lbox(-w2+side, w2-side, -d2+0.4, d2-0.8, z, z+0.8, mat));
+      for(const s of [-1,1]){                                                 // doors
+        const x0 = s < 0 ? -w2+side : 0.1, x1 = s < 0 ? -0.1 : w2-side;
+        g.add(lbox(x0, x1, d2-0.8, d2, feet+0.2, cabTop-0.1, mat));
+        g.add(lbox(-s*1.4 - 0.3, -s*1.4 + 0.3, d2, d2+0.7, (feet+cabTop)/2 - 3, (feet+cabTop)/2 + 3, gold));
+      }
+      g.add(lbox(3.5, w2-side-2.5, d2, d2+0.1, feet+2.5, cabTop-3, rattan));  // rattan panel on the right door
+      break;
+    }
+    case 'bamboo': {
+      // Open bamboo frame: corner posts, top frame, staggered shelves with short uprights,
+      // low cabinet with two slatted doors (left) and two drawers (right).
+      const p = 1.1, cabTop = h*0.2, X = f => -w2 + p + f*(it.w - 2*p);
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-p/2), y = sy*(d2-p/2);
+        g.add(lbox(x-p/2, x+p/2, y-p/2, y+p/2, 0, h, mat));                   // posts
+      }
+      g.add(lbox(-w2, w2, -d2, d2, h-1, h, mat));                             // top
+      g.add(lbox(-w2+p, w2-p, -d2+p/2, d2-p/2, 1.5, cabTop, mat));            // cabinet body
+      const fz0 = 2, fz1 = cabTop - 0.5, xm = X(0.52);
+      for(const [a, b] of [[X(0), X(0.26)], [X(0.26), xm]]){                  // slatted doors
+        g.add(lbox(a+0.2, b-0.2, d2-0.6, d2-0.4, fz0, fz1, mat));
+        for(let x = a + 1.5; x < b - 1; x += 1.4) g.add(lbox(x, x+0.35, d2-0.45, d2-0.2, fz0+1.5, fz1-1.5, M.dark));
+      }
+      for(let i=0; i<2; i++){                                                  // drawers
+        const z0 = fz0 + i*(fz1-fz0)/2 + 0.15, z1 = fz0 + (i+1)*(fz1-fz0)/2 - 0.15;
+        g.add(lbox(xm+0.2, X(1)-0.2, d2-0.6, d2-0.3, z0, z1, mat));
+        g.add(lbox((xm+X(1))/2-1.5, (xm+X(1))/2+1.5, d2-0.3, d2-0.1, (z0+z1)/2-0.4, (z0+z1)/2+0.4, M.dark));
+      }
+      for(const [a, b, f] of [[0.3,1,0.8],[0,0.7,0.66],[0.3,1,0.52],[0,0.7,0.38]])  // staggered shelves
+        g.add(lbox(X(a), X(b), -d2+p/2, d2-p/2, f*h, f*h+0.8, mat));
+      for(const [xf, f0, f1] of [[0.3,0.66,0.8],[0.7,0.52,0.66],[0.3,0.38,0.52],[0.7,0.2,0.38]])
+        for(const sy of [-1,1]) g.add(lbox(X(xf)-0.5, X(xf)+0.5, sy*(d2-p/2)-0.5, sy*(d2-p/2)+0.5, f0*h, f1*h, mat));
+      break;
+    }
+    case 'cubes': {
+      // Three columns of cubbies; the middle column stops a little lower; shelf heights staggered.
+      const t = 0.7, cw = it.w/3, midTop = h*0.93;
+      const cols = [{ top:h, n:6, off:0 }, { top:midTop, n:6, off:0.5 }, { top:h, n:6, off:0.25 }];
+      g.add(lbox(-w2, w2, -d2, -d2+0.3, 0, h, mat));                          // back
+      for(let c=0; c<3; c++){
+        const x0 = -w2 + c*cw, x1 = x0 + cw, col = cols[c];
+        g.add(lbox(x0, x0+t, -d2, d2, 0, col.top, mat));                      // left side of column
+        if(c === 2) g.add(lbox(x1-t, x1, -d2, d2, 0, col.top, mat));          // outer right side
+        g.add(lbox(x0, x1, -d2, d2, col.top-t, col.top, mat));                // column top
+        g.add(lbox(x0, x1, -d2, d2, 0, 1.2, mat));                            // base
+        const step = (col.top - 1.2)/col.n;
+        for(let i=1; i<col.n; i++){
+          const z = 1.2 + (i + (i < col.n - 1 ? col.off*0.5 : 0))*step;
+          g.add(lbox(x0+t, x1-(c===2 ? t : 0), -d2+0.3, d2, z-t/2, z+t/2, mat));
+        }
+      }
+      break;
+    }
+    case 'cornerlamp': {
+      // Corner shelf lamp: five pentagon shelves on corner posts, glowing LED bar in the back corner.
+      const shape = pts => new THREE.Shape(pts.map(([x,y]) => new THREE.Vector2(x, y)));
+      const foot = localPoly(it);
+      for(let i=0; i<5; i++){
+        const z = i === 0 ? 0.5 : i*(h-1)/4 + 0.5;
+        const geo = new THREE.ExtrudeGeometry(shape(foot), { depth:0.7, bevelEnabled:false });
+        geo.rotateX(Math.PI/2);
+        const m = new THREE.Mesh(geo, mat); m.position.y = z + 0.7; m.castShadow = m.receiveShadow = true;
+        g.add(m);
+      }
+      const s = 1.5, pts = [[it.w, 0], [it.w, s], [s, it.d], [0, it.d]].map(([x,y]) => [x-w2, y-d2]);
+      for(const [x, y] of pts) g.add(lbox(x-0.5, x+0.5, y-0.5, y+0.5, 0, h, mat));   // posts
+      const glow = new THREE.MeshStandardMaterial({ color:'#ffe2b0', emissive:'#ffcf8a', emissiveIntensity:1.4 });
+      g.add(lbox(-w2+0.6, -w2+1.6, -d2+0.6, -d2+1.6, 2, h-2, glow));          // LED bar in the corner
+      const light = new THREE.PointLight('#ffcf8a', 600, 70, 2);
+      light.position.set(-w2+3, h*0.6, -d2+3); g.add(light);
+      break;
+    }
+    case 'trunk': {
+      // Fluted storage chest on the floor, with a slightly overhanging lift lid.
+      const lidT = 1, body = h - lidT;
+      g.add(lbox(-w2+0.3, w2-0.3, -d2+0.3, d2-0.3, 0, body, mat));            // body
+      g.add(lbox(-w2, w2, -d2, d2, body, h, mat));                             // lid
+      const groove = new THREE.MeshStandardMaterial({ color:new THREE.Color(it.color).multiplyScalar(0.6), roughness:.8 });
+      for(let x = -w2 + 1.5; x < w2 - 1; x += 1.25)                           // flutes across the front
+        g.add(lbox(x, x+0.25, d2-0.32, d2-0.22, 0.6, body-0.6, groove));
+      break;
+    }
+    case 'cubby': {
+      // Open box of cubbies: outer case plus evenly spaced dividers and shelves.
+      const t = 0.75, cols = it.cols ?? 3, rows = it.rows ?? 2;
+      g.add(lbox(-w2, w2, -d2, d2, 0, t, mat));                                // bottom
+      g.add(lbox(-w2, w2, -d2, d2, h-t, h, mat));                              // top
+      g.add(lbox(-w2, -w2+t, -d2, d2, t, h-t, mat));                           // sides
+      g.add(lbox(w2-t, w2, -d2, d2, t, h-t, mat));
+      g.add(lbox(-w2+t, w2-t, -d2, -d2+0.3, t, h-t, mat));                     // back
+      for(let c=1; c<cols; c++){ const x = -w2 + c*it.w/cols; g.add(lbox(x-t/2, x+t/2, -d2+0.3, d2, t, h-t, mat)); }
+      for(let r=1; r<rows; r++){ const z = r*h/rows; g.add(lbox(-w2+t, w2-t, -d2+0.3, d2, z-t/2, z+t/2, mat)); }
+      break;
+    }
+    case 'farmfile': {
+      // Two lateral file drawers with X-brace fronts, overhanging top, short legs, black corner brackets.
+      const L = it.legH, fy = d2 - 0.8;
+      g.add(lbox(-w2+0.3, w2-0.3, -d2+0.3, fy, L, h-1.2, mat));              // body
+      g.add(lbox(-w2, w2, -d2, d2, h-1.2, h, mat));                          // top
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const x = sx*(w2-1.4), y = sy*(d2-1.4);
+        g.add(lbox(x-0.9, x+0.9, y-0.9, y+0.9, 0, L, mat));                  // leg
+      }
+      const zb = L + 0.4, zt = h - 1.6, dh = (zt - zb)/2;
+      for(let i=0; i<2; i++){
+        const z0 = zb + i*dh + 0.2, z1 = zb + (i+1)*dh - 0.2;
+        g.add(lbox(-w2+1.6, w2-1.6, fy, fy+0.7, z0, z1, mat));               // drawer front
+        const bw = it.w - 7, bh = z1 - z0 - 4, len = Math.hypot(bw, bh);
+        for(const s of [-1,1]){                                              // X braces
+          const brace = new THREE.Mesh(new THREE.BoxGeometry(len, 0.9, 0.35), mat);
+          brace.rotation.z = s*Math.atan2(bh, bw);
+          brace.position.set(0, (z0 + z1)/2 - 0.6, fy + 0.85);
+          g.add(brace);
+        }
+        g.add(lbox(-2.5, 2.5, fy+0.7, fy+1.3, z1-1.7, z1-1.1, M.dark));      // handle
+      }
+      for(const sx of [-1,1]) for(const sy of [-1,1])                        // corner brackets on the top
+        g.add(lbox(sx*w2 - (sx>0 ? 1.5 : 0), sx*w2 + (sx<0 ? 1.5 : 0), sy*d2 - (sy>0 ? 1.5 : 0), sy*d2 + (sy<0 ? 1.5 : 0), h-1.3, h+0.05, M.dark));
+      break;
+    }
+    case 'chest': {
+      // Overhanging top and base, three drawers with raised panels and brass pulls, open cubby below.
+      const brass = new THREE.MeshStandardMaterial({ color:'#b08d57', metalness:.6, roughness:.35 });
+      const inset = 0.8, capT = 1.2, baseT = 3, fy = d2 - inset;
+      const drawerH = Math.min(11.81, (h - capT - baseT - 6)/3);
+      g.add(lbox(-w2, w2, -d2, d2, 0, baseT, mat));                          // base
+      g.add(lbox(-w2+inset, w2-inset, -d2+inset, fy, baseT, h-capT, mat));   // body
+      g.add(lbox(-w2, w2, -d2, d2, h-capT, h, mat));                         // top
+      for(let i=0; i<3; i++){
+        const z1 = h - capT - 0.3 - i*drawerH, z0 = z1 - drawerH + 0.3;
+        g.add(lbox(-w2+inset+0.4, w2-inset-0.4, fy, fy+0.5, z0, z1, mat));   // drawer front
+        g.add(lbox(-w2+inset+2.2, w2-inset-2.2, fy+0.5, fy+0.8, z0+1.8, z1-1.8, mat)); // raised panel
+        const zm = (z0 + z1)/2;
+        g.add(lbox(-1.6, 1.6, fy+0.8, fy+1.3, zm-0.3, zm+0.3, brass));        // pull
+      }
+      const cubbyTop = h - capT - 3*drawerH;
+      g.add(lbox(-w2+inset+0.75, w2-inset-0.75, fy, fy+0.05, baseT+0.5, cubbyTop-0.5, M.dark)); // open cubby
+      break;
+    }
+    case 'bookcab': {
+      // Rounded-front cabinet on black legs (tambour door on the right, open cubby on the left),
+      // open bookcase on top set back to the shallower shelf depth.
+      const L = it.legH, top = L + it.cabH, uD = it.upperD;
+      const tambour = new THREE.MeshStandardMaterial({ color:new THREE.Color(it.color).multiplyScalar(0.8), roughness:.8 });
+      const extr = (poly, z0, z1, m) => {
+        const geo = new THREE.ExtrudeGeometry(new THREE.Shape(poly.map(([x,y]) => new THREE.Vector2(x, y))), { depth:z1-z0, bevelEnabled:false });
+        geo.rotateX(Math.PI/2);
+        const mesh = new THREE.Mesh(geo, m); mesh.position.y = z1; mesh.castShadow = mesh.receiveShadow = true;
+        return mesh;
+      };
+      for(const sx of [-1,1]) for(const sy of [-1,1]){
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, L, 12), M.dark);
+        leg.position.set(sx*(w2-4), L/2, sy*(d2-3.5)); leg.castShadow = true;
+        g.add(leg);
+      }
+      const foot = localPoly(it);
+      const inner = roundedFrontRect(it.w-0.6, it.d-0.6, Math.max(it.r-0.3, 0)).map(([x,y]) => [x-(it.w-0.6)/2, y-d2]);
+      g.add(extr(foot, L, L+0.8, mat));                                       // bottom
+      g.add(extr(inner, L+0.8, top-0.8, tambour));                            // cabinet body / tambour
+      g.add(extr(foot, top-0.8, top, mat));                                   // top lip
+      const front = d2 - 0.3;
+      g.add(lbox(-w2+it.r, -0.8, front-0.02, front+0.06, L+1.3, top-1.3, M.dark)); // open cubby
+      for(let x = 0.6; x < w2 - it.r; x += 0.7)                               // tambour slats
+        g.add(lbox(x, x+0.15, front-0.02, front+0.08, L+1.3, top-1.3, M.dark));
+      g.add(lbox(-w2, -w2+0.75, -d2, -d2+uD, top, h, mat));                   // shelf sides
+      g.add(lbox(w2-0.75, w2, -d2, -d2+uD, top, h, mat));
+      g.add(lbox(-w2+0.75, w2-0.75, -d2, -d2+0.4, top, h-1, tambour));        // back
+      g.add(lbox(-w2, w2, -d2, -d2+uD, h-1, h, mat));                         // top
+      for(let i=1; i<=3; i++){ const z = top + i*(h-1-top)/4; g.add(lbox(-w2+0.75, w2-0.75, -d2+0.4, -d2+uD, z-0.4, z+0.4, mat)); }
+      break;
+    }
+    case 'filehutch': {
+      // Two barn-door file drawers under a rustic top, with a shallow open hutch at the back.
+      const B = it.baseH, hd = it.hutchD;
+      const topMat = new THREE.MeshStandardMaterial({ color:'#4a3a2e', roughness:.7 });
+      g.add(lbox(-w2, w2, -d2, d2-0.6, 0, B-0.8, mat));                      // file base
+      g.add(lbox(-w2, w2, -d2, d2, B-0.8, B, topMat));                       // top
+      g.add(lbox(-w2+0.6, w2-0.6, d2-0.6, d2, 0, 5.5, mat));                  // toe kick
+      const fz0 = 5.8, dh = (B - 1.1 - fz0)/2;
+      for(let i=0; i<2; i++){
+        const z0 = fz0 + i*dh + 0.15, z1 = fz0 + (i+1)*dh - 0.15;
+        g.add(lbox(-w2+1.2, w2-1.2, d2-0.6, d2-0.1, z0, z1, mat));           // drawer front
+        const bw = it.w - 4.4, bh = z1 - z0 - 3, len = Math.hypot(bw, bh);
+        for(const s of [-1,1]){                                              // barn-door X braces
+          const brace = new THREE.Mesh(new THREE.BoxGeometry(len, 0.5, 0.3), mat);
+          brace.rotation.z = s*Math.atan2(bh, bw);
+          brace.position.set(0, (z0 + z1)/2 - 0.8, d2 - 0.05);
+          g.add(brace);
+        }
+        g.add(lbox(-2.5, 2.5, d2-0.1, d2+0.4, z1-1.6, z1-1.1, M.dark));      // handle
+      }
+      g.add(lbox(-w2, -w2+0.7, -d2, -d2+hd, B, h, mat));                     // hutch sides
+      g.add(lbox(w2-0.7, w2, -d2, -d2+hd, B, h, mat));
+      g.add(lbox(-w2+0.7, w2-0.7, -d2, -d2+0.4, B, h-0.8, mat));             // hutch back
+      g.add(lbox(-w2, w2, -d2, -d2+hd, h-0.8, h, topMat));                   // hutch top
+      for(let i=1; i<=2; i++){ const z = B + i*(h-0.8-B)/3; g.add(lbox(-w2+0.7, w2-0.7, -d2+0.4, -d2+hd, z-0.35, z+0.35, mat)); }
+      break;
+    }
+    case 'futon': {
+      g.add(lbox(-w2, w2, -d2, d2, 0, 8, M.wood));
+      g.add(lbox(-w2+1, w2-1, -d2+12, d2-1, 8, 16, mat));
+      const back = new THREE.Mesh(new THREE.BoxGeometry(it.w-2, h-10, 6), mat);
+      back.rotation.x = -0.28;
+      back.position.set(0, 10 + (h-10)/2*Math.cos(0.28), -d2 + 11);
+      back.castShadow = back.receiveShadow = true;
+      g.add(back);
+      break;
+    }
+    case 'chair': {
+      g.add(lbox(-w2+2, w2-2, -d2+2, d2-2, 0, 1.5, M.dark));
+      g.add(lbox(-1, 1, -1, 1, 1.5, 16, M.metal));
+      g.add(lbox(-w2+3, w2-3, -d2+3, d2-4, 16, 19, mat));
+      g.add(lbox(-w2+4, w2-4, d2-4, d2-2, 19, h, mat));
+      break;
+    }
+    case 'rug':
+      g.add(lbox(-w2, w2, -d2, d2, 0, h, mat));
+      break;
+    default:
+      g.add(lbox(-w2, w2, -d2, d2, 0, h, mat));
+  }
+  if(it.id === selectedId || problems.bad.has(it.id)){
+    const tint = problems.bad.has(it.id) ? '#7a1010' : '#1d3f8a';
+    g.traverse(o => { if(o.isMesh && o.material === mat) o.material.emissive = new THREE.Color(tint); });
+  }
+  g.position.set(it.x, it.z || 0, it.y);
+  g.rotation.y = -it.rot*Math.PI/180;
+  g.userData.id = it.id;
+  return g;
+}
+function rebuildFurniture3D(){
+  furnitureGroup.traverse(o => { if(o.isMesh){ o.geometry.dispose(); if(!Object.values(M).includes(o.material)) o.material.dispose(); } });
+  furnitureGroup.clear();
+  for(const it of shownItems()) furnitureGroup.add(buildItem3D(it));
+}
+
+const cutaway = document.getElementById('cutaway');
+function updateWallVisibility(){
+  for(const [k, g] of Object.entries(wallGroups)){
+    if(!cutaway.checked){ g.visible = true; continue; }
+    const w = WALLS[k];
+    g.visible = (camera.position.x - w.c[0])*w.out[0] + (camera.position.z - w.c[1])*w.out[1] < 0;
+  }
+}
+function setCam(kind){
+  const {W, D} = ROOM;
+  const futon = items.find(i => i.kind === 'futon');
+  const views = {
+    iso:   [[-15, 165, -75], [W/2+10, 15, D/2+5]],
+    top:   [[W/2, 300, D/2 + (northDown ? -1 : 1)], [W/2, 0, D/2]],   // matches the plan's orientation
+    door:  [[117, 64, 6], [150, 30, 88]],
+    desk:  [[140, 46, 34], [170, 38, 94]],
+    futon: futon ? [[futon.x, 40, futon.y+12], [150, 30, 80]] : [[40, 40, 34], [150, 30, 80]],
+  };
+  const [p, t] = views[kind];
+  camera.position.set(...p); controls.target.set(...t); controls.update();
+}
+document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => setCam(b.dataset.cam));
+
+function resize(){
+  const r = threeEl.getBoundingClientRect();
+  if(!r.width || !r.height) return;
+  renderer.setSize(r.width, r.height);
+  camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(threeEl);
+function loop(){
+  controls.update(); updateWallVisibility();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+/* ===================== boot ===================== */
+function renderAll(){
+  problems = findProblems();
+  renderPlan(); renderList(); renderForm(); renderProblems(); renderBudget(); renderLayouts();
+  rebuildFurniture3D();
+}
+
+store = loadStore();
+const freshStore = !store;
+if(!store) store = { version:1, current:"Today's room", layouts:{ "Today's room": defaultItems() }, applied:MIGRATIONS.map(m => m.id) };
+if(!Array.isArray(store.applied)) store.applied = [];
+const migrationNotes = [];
+for(const m of MIGRATIONS){
+  if(store.applied.includes(m.id)) continue;
+  const note = m.run(store);
+  store.applied.push(m.id);
+  if(note) migrationNotes.push(note);
+}
+if(!store.layouts[store.current]) store.current = Object.keys(store.layouts)[0];
+items = clone(store.layouts[store.current]);
+resetHistory();
+renderPalette();
+buildRoom3D();
+setCam('iso');
+resize();
+renderAll();
+if(!statusEl.classList.contains('err')){
+  if(freshStore || migrationNotes.length) saveStore();
+  if(migrationNotes.length && storageOk) setStatus(migrationNotes.join(' · '));
+  else if(!freshStore) setStatus(`Loaded "${store.current}"`);
+}
+loop();
+window.__office = {
+  get items(){ return items; }, get problems(){ return problems; }, FIXTURES,
+  get northDown(){ return northDown; }, view: (x, y) => view(x, y),
+  furniture3D: () => furnitureGroup.children.map(g => { let meshes = 0; g.traverse(o => { if(o.isMesh) meshes++; }); return { id:g.userData.id, meshes }; }),
+};
+</script>
+</body>
+</html>
