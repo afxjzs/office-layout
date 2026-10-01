@@ -297,12 +297,18 @@
       check('flip button switches back to north down', o.northDown === true);
     }
 
-    // --- Printer table: measured 23.5 W × 17.5 D (height and position still estimated) ---
+    // --- Printer table: measured 23.5 W × 17.5 D and position (height still estimated) ---
     {
       const pt = o.items.find(i => i.id === 'printer');
       check('printer table is the measured 23.5 × 17.5', pt?.w === 23.5 && pt?.d === 17.5, `${pt?.w}×${pt?.d}`);
       check('printer table still backs onto the south wall', !!pt && Math.abs(pt.y + pt.d/2 - 94) < 0.01, pt && String(pt.y + pt.d/2));
-      check('printer table stays marked as an estimate (height, position)', pt?.est === true);
+      check('printer table stays marked as an estimate (height)', pt?.est === true);
+      // The "What's measured vs. assumed" panel once still called the printer table's size and position estimates.
+      const notes = [...document.querySelectorAll('details')].find(d => /measured vs\. assumed/.test(d.querySelector('summary')?.textContent || ''));
+      const lines = notes ? [...notes.querySelectorAll('li')].map(li => li.textContent) : [];
+      const measured = lines.find(t => t.startsWith('Measured by you')) || '', estimated = lines.filter(t => t.startsWith('Estimated')).join(' ');
+      check('notes panel lists the printer table and file cabinet as measured', /printer table/i.test(measured) && /file cabinet/i.test(measured), measured);
+      check('notes panel lists only the printer table height as estimated', /printer table height/i.test(estimated) && !/printer table (size|and|position)/i.test(estimated), estimated);
       check('no overlap warning between the glass cabinet and the printer table', !o.problems.probs.some(p => p.includes('Printer table')), JSON.stringify(o.problems.probs));
       const saved = JSON.parse(localStorage.getItem('office-layout.v1'));
       const edited = saved.layouts.Screenshot?.find(i => i.id === 'printer');
